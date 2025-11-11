@@ -1,0 +1,173 @@
+.orders-page {
+  padding: 40px 0;
+  min-height: calc(100vh - 80px);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.order-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #ECF0F1;
+}
+
+.order-id {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2C3E50;
+  margin-bottom: 4px;
+}
+
+.order-date {
+  color: #7F8C8D;
+  font-size: 14px;
+}
+
+.order-items {
+  margin-bottom: 20px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #ECF0F1;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  font-weight: 600;
+  color: #2C3E50;
+  margin-bottom: 4px;
+}
+
+.item-qty {
+  font-size: 14px;
+  color: #7F8C8D;
+}
+
+.item-price {
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.order-footer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  padding-top: 20px;
+  border-top: 2px solid #ECF0F1;
+}
+
+.order-address {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.order-address strong {
+  color: #2C3E50;
+}
+
+.order-total {
+  text-align: right;
+}
+
+.total-label {
+  font-size: 14px;
+  color: #7F8C8D;
+  margin-bottom: 4px;
+}
+
+.total-amount {
+  font-size: 28px;
+  font-weight: 800;
+  color: #2C3E50;
+  margin-bottom: 8px;
+}
+
+.paid-badge {
+  display: inline-block;
+  background: #d4edda;
+  color: #155724;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-info {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.badge-primary {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.empty-orders {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+}
+
+.empty-content {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 120px;
+  display: block;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.empty-content h2 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #2C3E50;
+  margin-bottom: 12px;
+}
+
+.empty-content p {
+  font-size: 18px;
+  color: #7F8C8D;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+  .order-footer {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .order-total {
+    text-align: left;
+  }
+}
