@@ -1,0 +1,259 @@
+.cart-page {
+  padding: 40px 0;
+  min-height: calc(100vh - 80px);
+}
+
+.page-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #2C3E50;
+  margin-bottom: 32px;
+}
+
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+}
+
+.cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cart-item {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 120px 1fr auto auto;
+  gap: 20px;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.cart-item-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2C3E50;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.cart-item-name:hover {
+  color: #FF6B35;
+}
+
+.cart-item-category {
+  color: #7F8C8D;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.cart-item-price {
+  font-size: 20px;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cart-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: white;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.qty-btn:hover {
+  background: #FF6B35;
+  color: white;
+}
+
+.quantity {
+  font-weight: 700;
+  min-width: 30px;
+  text-align: center;
+}
+
+.btn-remove {
+  background: none;
+  border: none;
+  color: #E74C3C;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-remove:hover {
+  color: #C0392B;
+}
+
+.cart-item-total {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2C3E50;
+  min-width: 120px;
+  text-align: right;
+}
+
+.cart-summary {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.cart-summary h3 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  color: #2C3E50;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.summary-row.total {
+  font-size: 24px;
+  font-weight: 800;
+  color: #2C3E50;
+}
+
+.free {
+  color: #2ECC71;
+  font-weight: 700;
+}
+
+.summary-divider {
+  height: 1px;
+  background: #ECF0F1;
+  margin: 20px 0;
+}
+
+.continue-shopping {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  color: #7F8C8D;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.continue-shopping:hover {
+  color: #FF6B35;
+}
+
+.empty-cart {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+}
+
+.empty-cart-content {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 120px;
+  display: block;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.empty-cart-content h2 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #2C3E50;
+  margin-bottom: 12px;
+}
+
+.empty-cart-content p {
+  font-size: 18px;
+  color: #7F8C8D;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+  .cart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-item {
+    grid-template-columns: 80px 1fr;
+    gap: 16px;
+  }
+
+  .cart-item-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .cart-item-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .cart-item-total {
+    grid-column: 1 / -1;
+    text-align: left;
+    font-size: 20px;
+  }
+
+  .cart-summary {
+    position: static;
+  }
+}
