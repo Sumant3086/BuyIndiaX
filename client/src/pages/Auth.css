@@ -23,8 +23,9 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
+  height: 5px;
   background: var(--gradient-primary);
+  border-radius: 24px 24px 0 0;
 }
 
 .auth-header {
@@ -43,7 +44,7 @@
 }
 
 .auth-header p {
-  color: #7F8C8D;
+  color: var(--text-secondary);
   font-size: 16px;
 }
 
@@ -63,11 +64,11 @@
 }
 
 .auth-footer p {
-  color: #7F8C8D;
+  color: var(--text-secondary);
 }
 
 .auth-footer a {
-  color: #FF6B35;
+  color: var(--primary);
   text-decoration: none;
   font-weight: 600;
 }

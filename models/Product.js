@@ -39,6 +39,24 @@ const productSchema = new mongoose.Schema({
   numReviews: {
     type: Number,
     default: 0
+  },
+  originalPrice: {
+    type: Number
+  },
+  discount: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
+  tags: [String],
+  views: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

@@ -7,7 +7,7 @@ import './Checkout.css';
 const API_URL = 'http://localhost:5000/api';
 
 const Checkout = () => {
-  const { cart, fetchCart } = useContext(CartContext);
+  const { cart } = useContext(CartContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({

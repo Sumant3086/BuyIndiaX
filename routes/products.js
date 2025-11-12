@@ -37,10 +37,66 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single product
-router.get('/:id', async (req, res) => {
+// Get featured products
+router.get('/featured/list', async (req, res) => {
+  try {
+    const products = await Product.find({ isFeatured: true }).limit(6);
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get trending products (most viewed)
+router.get('/trending/list', async (req, res) => {
+  try {
+    const products = await Product.find().sort({ views: -1 }).limit(8);
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get deals (products with discount)
+router.get('/deals/list', async (req, res) => {
+  try {
+    const products = await Product.find({ discount: { $gt: 0 } })
+      .sort({ discount: -1 })
+      .limit(10);
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get product recommendations
+router.get('/recommendations/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Find similar products in same category
+    const recommendations = await Product.find({
+      _id: { $ne: req.params.id },
+      category: product.category
+    }).limit(4);
+
+    res.json(recommendations);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get single product and increment views
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }

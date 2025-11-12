@@ -9,51 +9,70 @@ const products = [
     name: 'Premium Wireless Headphones',
     description: 'High-quality wireless headphones with noise cancellation and 30-hour battery life. Perfect for music lovers and professionals.',
     price: 2999,
+    originalPrice: 4999,
+    discount: 40,
     category: 'Electronics',
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
     stock: 50,
     rating: 4.5,
-    numReviews: 128
+    numReviews: 128,
+    isFeatured: true,
+    tags: ['wireless', 'audio', 'noise-cancelling']
   },
   {
     name: 'Smart Watch Pro',
     description: 'Feature-packed smartwatch with fitness tracking, heart rate monitor, and 7-day battery life.',
     price: 4999,
+    originalPrice: 7999,
+    discount: 37,
     category: 'Electronics',
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
     stock: 35,
     rating: 4.3,
-    numReviews: 95
+    numReviews: 95,
+    isFeatured: true,
+    tags: ['smartwatch', 'fitness', 'wearable']
   },
   {
     name: 'Cotton Casual T-Shirt',
     description: 'Comfortable 100% cotton t-shirt available in multiple colors. Perfect for everyday wear.',
     price: 499,
+    originalPrice: 799,
+    discount: 38,
     category: 'Clothing',
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500',
     stock: 100,
     rating: 4.2,
-    numReviews: 210
+    numReviews: 210,
+    tags: ['cotton', 'casual', 'comfortable']
   },
   {
     name: 'Designer Denim Jeans',
     description: 'Premium quality denim jeans with modern fit. Durable and stylish for any occasion.',
     price: 1299,
+    originalPrice: 2499,
+    discount: 48,
     category: 'Clothing',
     image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500',
     stock: 75,
     rating: 4.6,
-    numReviews: 156
+    numReviews: 156,
+    isFeatured: true,
+    tags: ['denim', 'jeans', 'fashion']
   },
   {
     name: 'The Complete Guide to Web Development',
     description: 'Comprehensive guide covering HTML, CSS, JavaScript, and modern frameworks. Perfect for beginners and intermediates.',
     price: 799,
+    originalPrice: 1299,
+    discount: 38,
     category: 'Books',
     image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=500',
     stock: 60,
     rating: 4.8,
-    numReviews: 342
+    numReviews: 342,
+    isFeatured: true,
+    tags: ['programming', 'web-development', 'education']
   },
   {
     name: 'Motivational Success Stories',
@@ -63,7 +82,8 @@ const products = [
     image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500',
     stock: 45,
     rating: 4.4,
-    numReviews: 89
+    numReviews: 89,
+    tags: ['motivation', 'success', 'inspiration']
   },
   {
     name: 'Modern Table Lamp',

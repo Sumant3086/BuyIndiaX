@@ -7,9 +7,11 @@ const API_URL = 'http://localhost:5000/api';
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userStats, setUserStats] = useState(null);
 
   useEffect(() => {
     fetchOrders();
+    fetchUserStats();
   }, []);
 
   const fetchOrders = async () => {
@@ -20,6 +22,18 @@ const Orders = () => {
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserStats(response.data.user);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
     }
   };
 
@@ -57,6 +71,35 @@ const Orders = () => {
     <div className="orders-page">
       <div className="container">
         <h1 className="page-title">My Orders 📦</h1>
+
+        {userStats && (
+          <div className="loyalty-card">
+            <div className="loyalty-info">
+              <div className="loyalty-item">
+                <span className="loyalty-icon">⭐</span>
+                <div>
+                  <p className="loyalty-label">Loyalty Points</p>
+                  <p className="loyalty-value">{userStats.loyaltyPoints || 0}</p>
+                </div>
+              </div>
+              <div className="loyalty-item">
+                <span className="loyalty-icon">👑</span>
+                <div>
+                  <p className="loyalty-label">Membership Tier</p>
+                  <p className="loyalty-value">{userStats.membershipTier || 'Bronze'}</p>
+                </div>
+              </div>
+              <div className="loyalty-item">
+                <span className="loyalty-icon">💰</span>
+                <div>
+                  <p className="loyalty-label">Total Spent</p>
+                  <p className="loyalty-value">₹{(userStats.totalSpent || 0).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            <p className="loyalty-note">💡 Earn 1 point for every ₹100 spent!</p>
+          </div>
+        )}
 
         <div className="orders-list">
           {orders.map((order) => (

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import DealsSection from '../components/DealsSection';
+import SearchBar from '../components/SearchBar';
 import './Home.css';
 
 const Home = () => {
@@ -30,6 +32,9 @@ const Home = () => {
             <p className="hero-subtitle">
               Discover amazing products from across India. Quality guaranteed, prices unbeatable!
             </p>
+            <div style={{ margin: '30px 0' }}>
+              <SearchBar />
+            </div>
             <div className="hero-buttons">
               <Link to="/products" className="btn btn-primary btn-lg">
                 Shop Now 🛍️
@@ -89,6 +94,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      <DealsSection />
 
       <section className="cta-section">
         <div className="container">

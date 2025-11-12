@@ -63,6 +63,20 @@ router.post('/confirm-payment', auth, async (req, res) => {
       });
     }
 
+    // Award loyalty points (1 point per ₹100 spent)
+    const User = require('../models/User');
+    const pointsEarned = Math.floor(order.totalAmount / 100);
+    const user = await User.findById(req.user._id);
+    user.loyaltyPoints += pointsEarned;
+    user.totalSpent += order.totalAmount;
+
+    // Update membership tier
+    if (user.totalSpent >= 50000) user.membershipTier = 'Platinum';
+    else if (user.totalSpent >= 25000) user.membershipTier = 'Gold';
+    else if (user.totalSpent >= 10000) user.membershipTier = 'Silver';
+    
+    await user.save();
+
     // Clear user cart
     await Cart.findOneAndUpdate(
       { user: req.user._id },
