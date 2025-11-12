@@ -31,7 +31,20 @@ const userSchema = new mongoose.Schema({
     zipCode: String,
     country: String
   },
-  phone: String
+  phone: String,
+  loyaltyPoints: {
+    type: Number,
+    default: 0
+  },
+  totalSpent: {
+    type: Number,
+    default: 0
+  },
+  membershipTier: {
+    type: String,
+    enum: ['Bronze', 'Silver', 'Gold', 'Platinum'],
+    default: 'Bronze'
+  }
 }, {
   timestamps: true
 });

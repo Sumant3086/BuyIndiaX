@@ -13,7 +13,10 @@ import Orders from './pages/Orders';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PaymentConfirm from './pages/PaymentConfirm';
+import Wishlist from './pages/Wishlist';
 import PrivateRoute from './components/PrivateRoute';
+import TrustBadges from './components/TrustBadges';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
 function App() {
@@ -31,11 +34,14 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
+                <Route path="/wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
                 <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
                 <Route path="/orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
                 <Route path="/payment-confirm/:orderId" element={<PrivateRoute><PaymentConfirm /></PrivateRoute>} />
               </Routes>
+              <TrustBadges />
             </main>
+            <ScrollToTop />
             <Footer />
           </div>
         </Router>

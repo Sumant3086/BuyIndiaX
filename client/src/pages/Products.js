@@ -20,6 +20,7 @@ const Products = () => {
 
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, search]);
 
   const fetchProducts = async () => {
@@ -106,6 +107,9 @@ const Products = () => {
                 <Link to={`/products/${product._id}`} className="product-image">
                   <img src={product.image} alt={product.name} />
                   {product.stock === 0 && <span className="out-of-stock">Out of Stock</span>}
+                  {product.stock > 0 && product.stock < 10 && (
+                    <span className="low-stock">Only {product.stock} left!</span>
+                  )}
                 </Link>
                 
                 <div className="product-info">
@@ -114,7 +118,7 @@ const Products = () => {
                   </Link>
                   <p className="product-category">{product.category}</p>
                   <div className="product-rating">
-                    {'⭐'.repeat(Math.round(product.rating))}
+                    <span className="stars">{'⭐'.repeat(Math.round(product.rating))}</span>
                     <span>({product.numReviews})</span>
                   </div>
                   <div className="product-footer">
@@ -124,7 +128,7 @@ const Products = () => {
                       onClick={() => handleAddToCart(product._id)}
                       disabled={product.stock === 0}
                     >
-                      {product.stock === 0 ? 'Out of Stock' : 'Add to Cart 🛒'}
+                      {product.stock === 0 ? 'Out of Stock' : 'Add 🛒'}
                     </button>
                   </div>
                 </div>

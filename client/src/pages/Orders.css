@@ -13,34 +13,53 @@
   background: white;
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(45, 113, 247, 0.08);
+  border: 2px solid rgba(45, 113, 247, 0.08);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.order-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: var(--gradient-primary);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
 
 .order-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(45, 113, 247, 0.15);
+  transform: translateY(-6px);
+  border-color: var(--primary);
+}
+
+.order-card:hover::before {
+  transform: scaleY(1);
 }
 
 .order-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #ECF0F1;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid rgba(45, 113, 247, 0.1);
 }
 
 .order-id {
   font-size: 18px;
   font-weight: 700;
-  color: #2C3E50;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .order-date {
-  color: #7F8C8D;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -51,8 +70,9 @@
 .order-item {
   display: flex;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #ECF0F1;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(45, 113, 247, 0.08);
 }
 
 .order-item:last-child {
@@ -61,13 +81,13 @@
 
 .item-name {
   font-weight: 600;
-  color: #2C3E50;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .item-qty {
   font-size: 14px;
-  color: #7F8C8D;
+  color: var(--text-secondary);
 }
 
 .item-price {
@@ -79,8 +99,9 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 32px;
-  padding-top: 20px;
-  border-top: 2px solid #ECF0F1;
+  padding-top: 24px;
+  border-top: 2px solid rgba(45, 113, 247, 0.1);
+  align-items: start;
 }
 
 .order-address {
@@ -90,7 +111,7 @@
 }
 
 .order-address strong {
-  color: #2C3E50;
+  color: var(--text-primary);
 }
 
 .order-total {
@@ -99,14 +120,14 @@
 
 .total-label {
   font-size: 14px;
-  color: #7F8C8D;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .total-amount {
   font-size: 28px;
   font-weight: 800;
-  color: #2C3E50;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -151,13 +172,13 @@
 .empty-content h2 {
   font-size: 32px;
   font-weight: 800;
-  color: #2C3E50;
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 
 .empty-content p {
   font-size: 18px;
-  color: #7F8C8D;
+  color: var(--text-secondary);
   margin-bottom: 32px;
 }
 
@@ -170,4 +191,51 @@
   .order-total {
     text-align: left;
   }
+}
+
+
+.loyalty-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 40px;
+  color: white;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.loyalty-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.loyalty-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.loyalty-icon {
+  font-size: 2.5rem;
+}
+
+.loyalty-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 5px;
+}
+
+.loyalty-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.loyalty-note {
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.2);
 }

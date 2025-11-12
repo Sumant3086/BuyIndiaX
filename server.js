@@ -23,6 +23,8 @@ app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/payment', require('./routes/payment'));
 app.use('/api/payment', require('./routes/payment-link'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/wishlist', require('./routes/wishlist'));
 
 // Health check
 app.get('/api/health', (req, res) => {

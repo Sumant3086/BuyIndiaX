@@ -39,6 +39,9 @@ const Navbar = () => {
             {user ? (
               <>
                 <Link to="/orders" className="nav-link" onClick={() => setIsOpen(false)}>Orders</Link>
+                <Link to="/wishlist" className="nav-link" onClick={() => setIsOpen(false)}>
+                  <span>❤️</span>
+                </Link>
                 <Link to="/cart" className="nav-link cart-link" onClick={() => setIsOpen(false)}>
                   <span className="cart-icon">🛒</span>
                   {cartItemsCount > 0 && <span className="cart-badge">{cartItemsCount}</span>}

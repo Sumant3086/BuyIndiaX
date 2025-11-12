@@ -5,8 +5,9 @@
 
 .checkout-layout {
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 32px;
+  grid-template-columns: 1fr 420px;
+  gap: 40px;
+  align-items: start;
 }
 
 .checkout-form-section h2,
@@ -86,9 +87,9 @@
 }
 
 .total-divider {
-  height: 1px;
-  background: #ECF0F1;
-  margin: 16px 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+  margin: 20px 0;
 }
 
 .free {
