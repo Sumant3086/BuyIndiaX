@@ -4,3 +4,17 @@ client/node_modules/
 client/build/
 .DS_Store
 *.log
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+
+# AWS
+*.pem
+*.ppk
+
+# Puppet
+puppet/.tmp/
