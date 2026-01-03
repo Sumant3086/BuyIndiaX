@@ -6,7 +6,7 @@
 ## 🎯 SLIDE 1: TITLE SLIDE
 
 **What to Say:**
-"This is BuyIndiaX - an automated MERN stack deployment project that demonstrates complete DevOps automation from infrastructure provisioning to continuous monitoring using industry-standard tools."
+"This is BuyIndiaX - an automated MERN stack deployment project that demonstrates complete DevOps automation from infrastructure provisio ning to continuous monitoring using industry-standard tools."
 
 **Key Points:**
 - Jump straight to project
@@ -36,26 +36,6 @@ BuyIndiaX is a full-stack MERN e-commerce platform that demonstrates this comple
 **Duration:** 1 minute
 
 ---
-
-## 🎯 SLIDE 3: DEVOPS FUNDAMENTALS
-
-**What to Say:**
-"Before diving into the tools, let me explain what DevOps is. DevOps combines Development and Operations to deliver software faster and more reliably. It's both a cultural and technical movement.
-
-The DevOps lifecycle is continuous - from planning and coding, through building and testing, to releasing, deploying, operating, and monitoring. The key is that feedback from monitoring loops back to planning, creating a continuous improvement cycle.
-
-The core principles are: Automation to eliminate manual tasks, Infrastructure as Code to manage infrastructure through version-controlled code, Continuous Monitoring for real-time visibility, and Collaboration to break down silos between development and operations teams.
-
-My project implements all these principles."
-
-**Key Points to Emphasize:**
-- DevOps = Development + Operations
-- Continuous lifecycle (infinity loop)
-- Four core principles: Automation, IaC, Monitoring, Collaboration
-- This project demonstrates all principles
-- Feedback loop is crucial
-
-**Duration:** 1 minute
 
 ---
 

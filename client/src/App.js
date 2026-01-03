@@ -14,7 +14,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import PaymentConfirm from './pages/PaymentConfirm';
 import Wishlist from './pages/Wishlist';
+import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
+import AdminRoute from './components/AdminRoute';
 import TrustBadges from './components/TrustBadges';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
@@ -37,6 +39,7 @@ function App() {
                 <Route path="/wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
                 <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
                 <Route path="/orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
+                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/payment-confirm/:orderId" element={<PrivateRoute><PaymentConfirm /></PrivateRoute>} />
               </Routes>
               <TrustBadges />

@@ -256,25 +256,3 @@ TOTAL TIME: 12 MINUTES
 ✅ Cloud Computing  ✅ Continuous Monitoring
 
 ---
-
-## 🎯 SLIDE 11: THANK YOU
-
-**[DESIGN: Professional closing]**
-
-```
-Questions?
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-BuyIndiaX - Automated MERN Stack Deployment
-
-Terraform | AWS EC2 | Puppet | Nagios
-85% faster | 0% errors | 99.9% uptime
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Sumant Yadav | 12201495 | A21 | KO014
-INT333 - DevOps | Faculty: Ms. Divya Thakur
-
-GitHub: github.com/Sumant3086/BuyIndiaX
-```

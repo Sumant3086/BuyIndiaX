@@ -39,6 +39,11 @@ const Navbar = () => {
             {user ? (
               <>
                 <Link to="/orders" className="nav-link" onClick={() => setIsOpen(false)}>Orders</Link>
+                {user.role === 'admin' && (
+                  <Link to="/admin" className="nav-link admin-link" onClick={() => setIsOpen(false)}>
+                    <span>⚙️ Admin</span>
+                  </Link>
+                )}
                 <Link to="/wishlist" className="nav-link" onClick={() => setIsOpen(false)}>
                   <span>❤️</span>
                 </Link>

@@ -19,12 +19,23 @@ router.post('/register', [
 
     const { name, email, password } = req.body;
 
+    // Prevent admin role creation through registration
+    if (req.body.role === 'admin') {
+      return res.status(403).json({ message: 'Admin accounts cannot be created through registration' });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = new User({ name, email, password });
+    // Force role to be 'user' only
+    const user = new User({ 
+      name, 
+      email, 
+      password,
+      role: 'user' // Always set to user, never admin
+    });
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });

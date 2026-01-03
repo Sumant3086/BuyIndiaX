@@ -110,6 +110,23 @@
   transform: translateX(-50%) scaleX(1);
 }
 
+.admin-link {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white !important;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.admin-link:hover {
+  background: linear-gradient(135deg, #ee5a24, #ff6b6b);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.admin-link::after {
+  display: none;
+}
+
 .cart-link {
   position: relative;
   font-size: 24px;

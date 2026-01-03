@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Product = require('../models/Product');
+const User = require('../models/User');
 
 dotenv.config();
 
@@ -152,15 +153,40 @@ const seedProducts = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB connected');
 
+    // Clear existing data
     await Product.deleteMany({});
     console.log('Existing products deleted');
 
+    // Create or update the single admin user
+    const existingAdmin = await User.findOne({ email: 'sumant@gmail.com' });
+    
+    if (existingAdmin) {
+      // Update existing admin user
+      existingAdmin.name = 'Admin';
+      existingAdmin.password = '@Sumant3086';
+      existingAdmin.role = 'admin';
+      await existingAdmin.save();
+      console.log('Admin user updated successfully');
+    } else {
+      // Create new admin user
+      const adminUser = new User({
+        name: 'Admin',
+        email: 'sumant@gmail.com',
+        password: '@Sumant3086',
+        role: 'admin'
+      });
+      
+      await adminUser.save();
+      console.log('Admin user created successfully');
+    }
+
+    // Add sample products
     await Product.insertMany(products);
     console.log('Sample products added successfully!');
 
     process.exit(0);
   } catch (error) {
-    console.error('Error seeding products:', error);
+    console.error('Error seeding data:', error);
     process.exit(1);
   }
 };
