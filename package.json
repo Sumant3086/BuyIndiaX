@@ -9,6 +9,7 @@
     "client": "npm start --prefix client",
     "dev:full": "concurrently \"npm run dev\" \"npm run client\"",
     "seed": "node scripts/seedProducts.js",
+    "seed:users": "node scripts/seedProducts.js",
     "build": "cd client && npm ci && npm run build",
     "heroku-postbuild": "npm run build",
     "install-client": "cd client && npm install",
