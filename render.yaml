@@ -12,6 +12,8 @@ services:
         value: 5000
       - key: CORS_ORIGIN
         value: https://buyindiax.onrender.com
+      - key: REACT_APP_API_URL
+        value: https://buyindiax.onrender.com/api
       # Set these manually in Render Dashboard:
       - key: MONGODB_URI
         sync: false  # mongodb+srv://sumant:sumant123@db.bhuvr7p.mongodb.net/?appName=DB
@@ -23,3 +25,9 @@ services:
         sync: false  # your_razorpay_key_secret
       - key: RAZORPAY_PAYMENT_LINK
         value: https://razorpay.me/@sumantyadav
+      - key: ADMIN_EMAIL
+        sync: false  # sumant@gmail.com
+      - key: ADMIN_PASSWORD
+        sync: false  # @Sumant3086
+      - key: ADMIN_NAME
+        value: Sumant Yadav
