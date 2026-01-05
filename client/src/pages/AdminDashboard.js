@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminDashboard.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
@@ -19,7 +21,7 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/orders/admin/dashboard', {
+      const response = await axios.get(`${API_URL}/orders/admin/dashboard`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDashboardData(response.data);
@@ -33,7 +35,7 @@ const AdminDashboard = () => {
   const fetchAllOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/orders/admin/all?page=${currentPage}&limit=10`, {
+      const response = await axios.get(`${API_URL}/orders/admin/all?page=${currentPage}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAllOrders(response.data);
@@ -45,7 +47,7 @@ const AdminDashboard = () => {
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/orders/admin/${orderId}/status`, 
+      await axios.put(`${API_URL}/orders/admin/${orderId}/status`, 
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

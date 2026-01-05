@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: buyindiax
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: CORS_ORIGIN
+        value: https://buyindiax.onrender.com
+      # Set these manually in Render Dashboard:
+      - key: MONGODB_URI
+        sync: false  # mongodb+srv://sumant:sumant123@db.bhuvr7p.mongodb.net/?appName=DB
+      - key: JWT_SECRET
+        sync: false  # buyindiax_secret_key_2024_secure_token
+      - key: RAZORPAY_KEY_ID
+        sync: false  # your_razorpay_key_id
+      - key: RAZORPAY_KEY_SECRET
+        sync: false  # your_razorpay_key_secret
+      - key: RAZORPAY_PAYMENT_LINK
+        value: https://razorpay.me/@sumantyadav

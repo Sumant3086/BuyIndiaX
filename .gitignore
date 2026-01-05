@@ -1,9 +1,75 @@
+# Dependencies
 node_modules/
-.env
 client/node_modules/
+
+# Production builds
 client/build/
-.DS_Store
+build/
+dist/
+
+# Environment files (ALL .env files)
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.staging
+client/.env
+client/.env.*
+client/*.env
+
+# Keep only example files
+!.env.example
+!client/.env.example
+
+# Credential files
+credentials.json
+config.json
+secrets.json
+*.key
+*.pem
+*.ppk
+*.p12
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
 *.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
 
 # Terraform
 terraform/.terraform/
@@ -11,10 +77,49 @@ terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/.terraform.lock.hcl
 terraform/terraform.tfvars
+terraform/terraform.tfvars.json
 
 # AWS
 *.pem
 *.ppk
+aws-credentials
+.aws/
 
 # Puppet
 puppet/.tmp/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

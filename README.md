@@ -6,8 +6,11 @@ A comprehensive full-stack MERN (MongoDB, Express.js, React, Node.js) e-commerce
 ![Node.js](https://img.shields.io/badge/Node.js-18.x-green)
 ![React](https://img.shields.io/badge/React-19.2.0-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
+![Render](https://img.shields.io/badge/Deploy-Render-purple)
 ![AWS](https://img.shields.io/badge/AWS-EC2-orange)
 ![License](https://img.shields.io/badge/License-ISC-blue)
+
+> **🚀 Live Demo**: [BuyIndiaX on Render](https://buyindiax.onrender.com) (Coming Soon)
 
 ## 🌟 Features
 
@@ -112,14 +115,12 @@ cd ..
 
 4. **Environment Configuration**
 ```bash
-# Copy the example environment file
-cp .env.example .env
-
-# Edit .env with your configuration
-# - Add your MongoDB connection string
-# - Set a secure JWT secret
-# - Add Razorpay credentials (if available)
+# Your .env file is already configured with development settings
+# No additional setup needed for local development
 ```
+ 
+
+**⚠️ Security Note**: The `.env` file is already in `.gitignore` and won't be committed to Git.
 
 5. **Database Setup**
 ```bash
@@ -283,6 +284,57 @@ BuyIndiaX/
 
 ## 🚀 Deployment
 
+### **Render Deployment (Recommended)**
+
+BuyIndiaX is optimized for deployment on Render with a single web service configuration.
+
+#### **Quick Deployment Steps**
+
+1. **Fork/Clone Repository**
+   - Fork this repository to your GitHub account
+   - Your `.env` file is already configured for development
+
+2. **Deploy to Render**
+   - Go to [Render Dashboard](https://dashboard.render.com)
+   - Click "New" → "Web Service"
+   - Connect your GitHub repository
+   - Use these settings:
+     - **Name**: `buyindiax` (or your preferred name)
+     - **Build Command**: `npm install && npm run build`
+     - **Start Command**: `npm start`
+     - **Environment**: Node
+     - **Plan**: Free (for testing) or Starter+ (for production)
+
+3. **Set Environment Variables in Render Dashboard**
+   
+   **⚠️ IMPORTANT**: Set these in Render Dashboard, not in code:
+   ```bash
+   NODE_ENV=production
+   PORT=5000
+   CORS_ORIGIN=https://your-app-name.onrender.com
+   MONGODB_URI=mongodb+srv://sumant:sumant123@db.bhuvr7p.mongodb.net/?appName=DB
+   JWT_SECRET=buyindiax_secret_key_2024_secure_token
+   RAZORPAY_KEY_ID=your_razorpay_key_id
+   RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+   RAZORPAY_PAYMENT_LINK=https://razorpay.me/@sumantyadav
+   ```
+
+4. **Deploy**
+   - Click "Create Web Service"
+   - Wait for deployment to complete
+   - Your app will be available at `https://your-app-name.onrender.com`
+
+#### **Post-Deployment Setup**
+- Test the application at your Render URL
+- Create admin user directly in MongoDB Atlas
+- Update Razorpay keys when you get real credentials
+
+#### **⚠️ Security Recommendations**
+- **Change MongoDB password** before production deployment
+- **Generate stronger JWT secret** for production
+- **Get real Razorpay credentials** from your dashboard
+- **Never commit .env files** to GitHub (already in .gitignore)
+
 ### **AWS Deployment with Terraform**
 
 1. **Prerequisites**
@@ -327,6 +379,9 @@ cd client && npm install && cd ..
 # Environment setup
 cp .env.example .env
 # Update .env with production values
+
+# Build frontend
+npm run build
 
 # Seed database
 npm run seed
