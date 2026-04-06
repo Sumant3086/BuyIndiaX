@@ -98,4 +98,26 @@ router.get('/me', auth, async (req, res) => {
   res.json({ user: req.user });
 });
 
+// Verify admin user exists (for debugging)
+router.get('/verify-admin', async (req, res) => {
+  try {
+    const admin = await User.findOne({ email: 'admin@buyindiax.com' }).select('-password');
+    if (admin) {
+      res.json({ 
+        exists: true, 
+        admin: {
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role
+        }
+      });
+    } else {
+      res.json({ exists: false, message: 'Admin user not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;

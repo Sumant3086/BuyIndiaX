@@ -22,8 +22,10 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const response = await axios.get(`${API_URL}/auth/me`);
+      console.log('Fetched user from /me:', response.data.user); // Debug log
       setUser(response.data.user);
     } catch (error) {
+      console.error('Error fetching user:', error); // Debug log
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
     } finally {
@@ -37,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(user);
+    console.log('User logged in:', user); // Debug log
     return response.data;
   };
 

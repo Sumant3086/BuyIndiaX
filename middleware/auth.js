@@ -16,9 +16,23 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    req.user = user;
+    // Convert mongoose document to plain object with all fields
+    // Include both id and _id for compatibility
+    req.user = {
+      _id: user._id,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      address: user.address,
+      loyaltyPoints: user.loyaltyPoints,
+      totalSpent: user.totalSpent,
+      membershipTier: user.membershipTier
+    };
     next();
   } catch (error) {
+    console.error('Auth middleware error:', error);
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

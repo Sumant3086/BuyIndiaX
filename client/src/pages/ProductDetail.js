@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
+import { showToast } from '../utils/toast';
+import RecentlyViewed, { addToRecentlyViewed } from '../components/RecentlyViewed';
 import './ProductDetail.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -33,6 +35,9 @@ const ProductDetail = () => {
     try {
       const response = await axios.get(`${API_URL}/products/${id}`);
       setProduct(response.data);
+      
+      // Add to recently viewed
+      addToRecentlyViewed(response.data);
     } catch (error) {
       console.error('Error fetching product:', error);
     } finally {
@@ -74,22 +79,22 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!user) {
-      alert('Please login to add items to cart');
+      showToast('Please login to add items to cart', 'warning');
       navigate('/login');
       return;
     }
 
     try {
       await addToCart(product._id, quantity);
-      alert('Product added to cart! 🛒');
+      showToast('Product added to cart! 🛒', 'success');
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to add to cart');
+      showToast(error.response?.data?.message || 'Failed to add to cart', 'error');
     }
   };
 
   const toggleWishlist = async () => {
     if (!user) {
-      alert('Please login to add to wishlist');
+      showToast('Please login to add to wishlist', 'warning');
       navigate('/login');
       return;
     }
@@ -101,24 +106,24 @@ const ProductDetail = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setInWishlist(false);
-        alert('Removed from wishlist');
+        showToast('Removed from wishlist', 'info');
       } else {
         await axios.post(`${API_URL}/wishlist/add`, 
           { productId: id },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setInWishlist(true);
-        alert('Added to wishlist! ❤️');
+        showToast('Added to wishlist! ❤️', 'success');
       }
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to update wishlist');
+      showToast(error.response?.data?.message || 'Failed to update wishlist', 'error');
     }
   };
 
   const submitReview = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert('Please login to submit a review');
+      showToast('Please login to submit a review', 'warning');
       navigate('/login');
       return;
     }
@@ -129,13 +134,13 @@ const ProductDetail = () => {
         { productId: id, rating, comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Review submitted! ⭐');
+      showToast('Review submitted! ⭐', 'success');
       setComment('');
       setRating(5);
       fetchReviews();
       fetchProduct();
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to submit review');
+      showToast(error.response?.data?.message || 'Failed to submit review', 'error');
     }
   };
 
@@ -152,7 +157,12 @@ const ProductDetail = () => {
       <div className="container">
         <div className="product-detail-layout">
           <div className="product-image-section">
-            <img src={product.image} alt={product.name} className="product-detail-image" />
+            <img 
+              src={product.image || 'https://via.placeholder.com/600x600?text=No+Image'} 
+              alt={product.name || 'Product'} 
+              className="product-detail-image"
+              onError={(e) => { e.target.src = 'https://via.placeholder.com/600x600?text=No+Image'; }}
+            />
           </div>
 
           <div className="product-info-section">
@@ -295,6 +305,9 @@ const ProductDetail = () => {
           </div>
         )}
       </div>
+      
+      {/* Recently Viewed Sidebar */}
+      <RecentlyViewed />
     </div>
   );
 };

@@ -5,35 +5,38 @@ const crypto = require('crypto');
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 
-// Initialize Razorpay only if keys are provided
-let razorpay = null;
-if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_ID !== 'your_razorpay_key_id') {
-  razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-  });
-}
+// Initialize Razorpay with test credentials
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_SZT2as0qsWZtkR',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'uJLKwIAhb6JcXu2PWIoBzHhC'
+});
 
-// Create Razorpay order
+// Create Razorpay order (direct integration)
 router.post('/create-order', auth, async (req, res) => {
   try {
     const { orderId } = req.body;
+    const userId = req.user.id || req.user._id;
 
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    if (order.user.toString() !== req.user._id.toString()) {
+    if (order.user.toString() !== userId.toString()) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
     const options = {
       amount: order.totalAmount * 100, // amount in paise
       currency: 'INR',
-      receipt: order._id.toString()
+      receipt: order._id.toString(),
+      notes: {
+        orderId: order._id.toString(),
+        userId: userId.toString()
+      }
     };
 
     const razorpayOrder = await razorpay.orders.create(options);
@@ -42,7 +45,8 @@ router.post('/create-order', auth, async (req, res) => {
       orderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      keyId: process.env.RAZORPAY_KEY_ID
+      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_SZT2as0qsWZtkR',
+      orderDetails: order
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -53,10 +57,11 @@ router.post('/create-order', auth, async (req, res) => {
 router.post('/verify', auth, async (req, res) => {
   try {
     const { orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const userId = req.user.id || req.user._id;
 
     const sign = razorpay_order_id + '|' + razorpay_payment_id;
     const expectedSign = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'uJLKwIAhb6JcXu2PWIoBzHhC')
       .update(sign.toString())
       .digest('hex');
 
@@ -83,9 +88,22 @@ router.post('/verify', auth, async (req, res) => {
         });
       }
 
+      // Award loyalty points
+      const pointsEarned = Math.floor(order.totalAmount / 100);
+      const user = await User.findById(userId);
+      user.loyaltyPoints += pointsEarned;
+      user.totalSpent += order.totalAmount;
+
+      // Update membership tier
+      if (user.totalSpent >= 50000) user.membershipTier = 'Platinum';
+      else if (user.totalSpent >= 25000) user.membershipTier = 'Gold';
+      else if (user.totalSpent >= 10000) user.membershipTier = 'Silver';
+      
+      await user.save();
+
       // Clear user cart
       await Cart.findOneAndUpdate(
-        { user: req.user._id },
+        { user: userId },
         { items: [], totalAmount: 0 }
       );
 

@@ -94,7 +94,7 @@
 
 .recent-orders-section,
 .orders-by-status {
-  background: white;
+  background: var(--card-bg);
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -194,7 +194,7 @@
 }
 
 .orders-management {
-  background: white;
+  background: var(--card-bg);
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);

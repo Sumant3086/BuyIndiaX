@@ -11,13 +11,6 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    fetchDashboardData();
-    if (activeTab === 'orders') {
-      fetchAllOrders();
-    }
-  }, [activeTab, currentPage]);
-
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -32,7 +25,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchAllOrders = async () => {
+  const fetchAllOrders = React.useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/orders/admin/all?page=${currentPage}&limit=10`, {
@@ -42,7 +35,14 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
-  };
+  }, [currentPage]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    if (activeTab === 'orders') {
+      fetchAllOrders();
+    }
+  }, [activeTab, fetchAllOrders]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {

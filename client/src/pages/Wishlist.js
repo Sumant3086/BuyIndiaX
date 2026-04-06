@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
+import { showToast } from '../utils/toast';
 import './Wishlist.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -44,7 +45,7 @@ const Wishlist = () => {
       });
       fetchWishlist();
     } catch (error) {
-      alert('Failed to remove from wishlist');
+      showToast('Failed to remove from wishlist', 'error');
     }
   };
 
@@ -52,9 +53,9 @@ const Wishlist = () => {
     try {
       await addToCart(productId, 1);
       await removeFromWishlist(productId);
-      alert('Moved to cart! 🛒');
+      showToast('Moved to cart! 🛒', 'success');
     } catch (error) {
-      alert('Failed to move to cart');
+      showToast('Failed to move to cart', 'error');
     }
   };
 
@@ -85,13 +86,17 @@ const Wishlist = () => {
                   ✕
                 </button>
                 <Link to={`/products/${item.product._id}`}>
-                  <img src={item.product.image} alt={item.product.name} />
+                  <img 
+                    src={item.product?.image || 'https://via.placeholder.com/300x300?text=No+Image'} 
+                    alt={item.product?.name || 'Product'}
+                    onError={(e) => { e.target.src = 'https://via.placeholder.com/300x300?text=No+Image'; }}
+                  />
                 </Link>
                 <div className="wishlist-card-content">
                   <Link to={`/products/${item.product._id}`}>
-                    <h3>{item.product.name}</h3>
+                    <h3>{item.product?.name || 'Unnamed Product'}</h3>
                   </Link>
-                  <p className="price">₹{item.product.price.toLocaleString()}</p>
+                  <p className="price">₹{(item.product?.price || 0).toLocaleString()}</p>
                   <div className="rating">
                     {'⭐'.repeat(Math.round(item.product.rating))}
                   </div>

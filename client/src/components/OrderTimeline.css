@@ -1,0 +1,259 @@
+.order-timeline-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.timeline-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.order-id {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+.order-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timeline-step {
+  display: flex;
+  gap: 30px;
+  position: relative;
+  min-height: 120px;
+}
+
+.timeline-step:last-child {
+  min-height: auto;
+}
+
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.timeline-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid;
+  z-index: 2;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.timeline-icon {
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.timeline-line {
+  flex: 1;
+  width: 4px;
+  background: var(--border-color);
+  position: relative;
+  margin: 5px 0;
+}
+
+.timeline-line-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+}
+
+.timeline-details {
+  flex: 1;
+  padding-top: 8px;
+}
+
+.timeline-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.timeline-description {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.timeline-date {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin: 0;
+  font-style: italic;
+}
+
+.timeline-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* Step States */
+.timeline-step.pending .timeline-icon-wrapper {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.timeline-step.pending .timeline-label {
+  color: var(--text-secondary);
+}
+
+.timeline-step.active .timeline-icon-wrapper {
+  box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
+}
+
+.timeline-step.completed .timeline-icon-wrapper {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Estimated Delivery */
+.estimated-delivery {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  padding: 25px;
+  border-radius: 12px;
+  margin-top: 30px;
+  color: white;
+}
+
+.delivery-icon {
+  font-size: 3rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.delivery-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.delivery-date {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* Delivery Address */
+.delivery-address {
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.delivery-address h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.address-content p {
+  margin: 5px 0;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .order-timeline-container {
+    padding: 20px;
+  }
+
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .timeline-step {
+    gap: 20px;
+  }
+
+  .timeline-icon-wrapper {
+    width: 50px;
+    height: 50px;
+  }
+
+  .timeline-icon {
+    font-size: 1.2rem;
+  }
+
+  .timeline-label {
+    font-size: 1rem;
+  }
+
+  .timeline-description {
+    font-size: 0.85rem;
+  }
+
+  .estimated-delivery {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .delivery-icon {
+    font-size: 2.5rem;
+  }
+}
+
+/* Dark Mode Adjustments */
+@media (prefers-color-scheme: dark) {
+  .timeline-line {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}

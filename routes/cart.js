@@ -7,16 +7,29 @@ const { auth } = require('../middleware/auth');
 // Get user cart
 router.get('/', auth, async (req, res) => {
   try {
-    let cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+    const userId = req.user.id || req.user._id;
+    let cart = await Cart.findOne({ user: userId }).populate('items.product');
     
     if (!cart) {
-      cart = new Cart({ user: req.user._id, items: [] });
+      cart = new Cart({ user: userId, items: [], totalAmount: 0 });
+      await cart.save();
+    }
+
+    // Filter out items with null products (deleted products)
+    const validItems = cart.items.filter(item => item.product);
+    
+    // If items were filtered out, update the cart
+    if (validItems.length !== cart.items.length) {
+      cart.items = validItems;
       await cart.save();
     }
 
     // Calculate total
-    const totalAmount = cart.items.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity);
+    const totalAmount = validItems.reduce((sum, item) => {
+      if (item.product) {
+        return sum + (item.product.price * item.quantity);
+      }
+      return sum;
     }, 0);
     
     cart.totalAmount = totalAmount;
@@ -24,6 +37,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json(cart);
   } catch (error) {
+    console.error('Cart fetch error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -32,6 +46,7 @@ router.get('/', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     const { productId, quantity = 1 } = req.body;
+    const userId = req.user.id || req.user._id;
 
     const product = await Product.findById(productId);
     if (!product) {
@@ -42,10 +57,10 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Insufficient stock' });
     }
 
-    let cart = await Cart.findOne({ user: req.user._id });
+    let cart = await Cart.findOne({ user: userId });
     
     if (!cart) {
-      cart = new Cart({ user: req.user._id, items: [] });
+      cart = new Cart({ user: userId, items: [] });
     }
 
     const existingItemIndex = cart.items.findIndex(
@@ -63,6 +78,7 @@ router.post('/', auth, async (req, res) => {
 
     res.json(cart);
   } catch (error) {
+    console.error('Cart add error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -71,8 +87,9 @@ router.post('/', auth, async (req, res) => {
 router.put('/:itemId', auth, async (req, res) => {
   try {
     const { quantity } = req.body;
+    const userId = req.user.id || req.user._id;
 
-    const cart = await Cart.findOne({ user: req.user._id });
+    const cart = await Cart.findOne({ user: userId });
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
@@ -88,6 +105,7 @@ router.put('/:itemId', auth, async (req, res) => {
 
     res.json(cart);
   } catch (error) {
+    console.error('Cart update error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -95,7 +113,8 @@ router.put('/:itemId', auth, async (req, res) => {
 // Remove from cart
 router.delete('/:itemId', auth, async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user._id });
+    const userId = req.user.id || req.user._id;
+    const cart = await Cart.findOne({ user: userId });
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
@@ -106,6 +125,7 @@ router.delete('/:itemId', auth, async (req, res) => {
 
     res.json(cart);
   } catch (error) {
+    console.error('Cart remove error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -113,7 +133,8 @@ router.delete('/:itemId', auth, async (req, res) => {
 // Clear cart
 router.delete('/', auth, async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user._id });
+    const userId = req.user.id || req.user._id;
+    const cart = await Cart.findOne({ user: userId });
     if (cart) {
       cart.items = [];
       cart.totalAmount = 0;
@@ -121,6 +142,7 @@ router.delete('/', auth, async (req, res) => {
     }
     res.json({ message: 'Cart cleared' });
   } catch (error) {
+    console.error('Cart clear error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

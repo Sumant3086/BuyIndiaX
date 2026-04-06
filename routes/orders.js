@@ -10,15 +10,27 @@ const { auth } = require('../middleware/auth');
 router.post('/', auth, async (req, res) => {
   try {
     const { shippingAddress } = req.body;
+    const userId = req.user.id || req.user._id;
 
-    const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
+    console.log('Creating order for user:', userId);
+
+    const cart = await Cart.findOne({ user: userId }).populate('items.product');
+    
+    console.log('Cart found:', cart ? `Yes, ${cart.items.length} items` : 'No');
     
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
     }
 
+    // Filter out items with null products
+    const validItems = cart.items.filter(item => item.product);
+    
+    if (validItems.length === 0) {
+      return res.status(400).json({ message: 'Cart has no valid products' });
+    }
+
     // Check stock availability
-    for (const item of cart.items) {
+    for (const item of validItems) {
       if (item.product.stock < item.quantity) {
         return res.status(400).json({ 
           message: `Insufficient stock for ${item.product.name}` 
@@ -26,28 +38,33 @@ router.post('/', auth, async (req, res) => {
       }
     }
 
-    const orderItems = cart.items.map(item => ({
+    const orderItems = validItems.map(item => ({
       product: item.product._id,
       name: item.product.name,
       quantity: item.quantity,
       price: item.product.price
     }));
 
-    const totalAmount = cart.items.reduce((sum, item) => {
+    const totalAmount = validItems.reduce((sum, item) => {
       return sum + (item.product.price * item.quantity);
     }, 0);
 
     const order = new Order({
-      user: req.user._id,
+      user: userId,
       items: orderItems,
       shippingAddress,
-      totalAmount
+      subtotal: totalAmount,
+      totalAmount,
+      paymentMethod: 'Razorpay'
     });
 
     await order.save();
 
+    console.log('Order created successfully:', order._id);
+
     res.status(201).json(order);
   } catch (error) {
+    console.error('Order creation error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -55,7 +72,8 @@ router.post('/', auth, async (req, res) => {
 // Get user orders
 router.get('/', auth, async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id })
+    const userId = req.user.id || req.user._id;
+    const orders = await Order.find({ user: userId })
       .populate('items.product')
       .sort({ createdAt: -1 });
     res.json(orders);
@@ -67,13 +85,14 @@ router.get('/', auth, async (req, res) => {
 // Get single order
 router.get('/:id', auth, async (req, res) => {
   try {
+    const userId = req.user.id || req.user._id;
     const order = await Order.findById(req.params.id).populate('items.product');
     
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    if (order.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (order.user.toString() !== userId.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
 

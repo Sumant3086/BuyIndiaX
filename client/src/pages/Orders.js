@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import OrderTimeline from '../components/OrderTimeline';
+import { fadeInUp, staggerContainer, staggerItem } from '../theme/animations';
 import './Orders.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -8,6 +11,7 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userStats, setUserStats] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -70,10 +74,22 @@ const Orders = () => {
   return (
     <div className="orders-page">
       <div className="container">
-        <h1 className="page-title">My Orders 📦</h1>
+        <motion.h1 
+          className="page-title"
+          variants={fadeInUp}
+          initial="hidden"
+          animate="visible"
+        >
+          My Orders 📦
+        </motion.h1>
 
         {userStats && (
-          <div className="loyalty-card">
+          <motion.div 
+            className="loyalty-card"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+          >
             <div className="loyalty-info">
               <div className="loyalty-item">
                 <span className="loyalty-icon">⭐</span>
@@ -98,12 +114,22 @@ const Orders = () => {
               </div>
             </div>
             <p className="loyalty-note">💡 Earn 1 point for every ₹100 spent!</p>
-          </div>
+          </motion.div>
         )}
 
-        <div className="orders-list">
+        <motion.div 
+          className="orders-list"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {orders.map((order) => (
-            <div key={order._id} className="order-card">
+            <motion.div 
+              key={order._id} 
+              className="order-card"
+              variants={staggerItem}
+              whileHover={{ y: -4 }}
+            >
               <div className="order-header">
                 <div>
                   <p className="order-id">Order #{order._id.slice(-8)}</p>
@@ -146,9 +172,47 @@ const Orders = () => {
                   )}
                 </div>
               </div>
-            </div>
+
+              <motion.button
+                className="btn btn-primary track-btn"
+                onClick={() => setSelectedOrder(order)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Track Order 📍
+              </motion.button>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
+
+        {/* Order Timeline Modal */}
+        <AnimatePresence>
+          {selectedOrder && (
+            <motion.div
+              className="timeline-modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedOrder(null)}
+            >
+              <motion.div
+                className="timeline-modal"
+                initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 50 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button 
+                  className="modal-close"
+                  onClick={() => setSelectedOrder(null)}
+                >
+                  ✕
+                </button>
+                <OrderTimeline order={selectedOrder} />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

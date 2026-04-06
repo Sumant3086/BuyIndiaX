@@ -38,7 +38,8 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   margin-top: 10px;
@@ -53,7 +54,7 @@
   padding: 12px 20px;
   cursor: pointer;
   transition: background 0.2s;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .suggestion-item:last-child {
@@ -61,7 +62,7 @@
 }
 
 .suggestion-item:hover {
-  background: #f8f9fa;
+  background: var(--bg-secondary);
 }
 
 .suggestion-image {
@@ -78,13 +79,13 @@
 
 .suggestion-name {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 3px;
 }
 
 .suggestion-category {
   font-size: 0.85rem;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }
 
 .suggestion-price {
@@ -96,5 +97,5 @@
 .no-results {
   padding: 20px;
   text-align: center;
-  color: #7f8c8d;
+  color: var(--text-secondary);
 }

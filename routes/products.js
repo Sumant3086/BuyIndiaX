@@ -37,6 +37,32 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Search products for autocomplete
+router.get('/search', async (req, res) => {
+  try {
+    const { q, limit = 10 } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.json([]);
+    }
+
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+        { category: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .select('name price image category rating numReviews')
+    .limit(parseInt(limit))
+    .sort({ rating: -1, numReviews: -1 });
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Get featured products
 router.get('/featured/list', async (req, res) => {
   try {
