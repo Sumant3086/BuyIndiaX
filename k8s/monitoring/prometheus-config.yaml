@@ -1,0 +1,49 @@
+# Prometheus Configuration
+# Collects metrics from all pods and services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: buyindiax
+data:
+  prometheus.yml: |
+    # Global configuration
+    global:
+      scrape_interval: 15s  # Collect metrics every 15 seconds
+      evaluation_interval: 15s  # Evaluate rules every 15 seconds
+    
+    # Scrape configurations
+    scrape_configs:
+      # Monitor Kubernetes API server
+      - job_name: 'kubernetes-apiservers'
+        kubernetes_sd_configs:
+        - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: default;kubernetes;https
+      
+      # Monitor all pods in buyindiax namespace
+      - job_name: 'buyindiax-pods'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - buyindiax
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          action: keep
+          regex: buyindiax-app
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+      
+      # Monitor MongoDB
+      - job_name: 'mongodb'
+        static_configs:
+        - targets: ['mongodb:27017']

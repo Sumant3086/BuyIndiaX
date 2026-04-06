@@ -55,11 +55,14 @@ A full-stack, production-ready e-commerce platform built with the MERN stack, fe
 - **Icons**: React Icons
 - **HTTP Client**: Axios
 
-### DevOps
+### DevOps & Infrastructure
 - **Containerization**: Docker & Docker Compose
+- **Orchestration**: Kubernetes with Helm
+- **Monitoring**: Prometheus & Grafana
 - **CI/CD**: GitHub Actions
 - **Security Scanning**: Trivy
 - **Code Quality**: ESLint, SonarCloud
+- **Auto-scaling**: Horizontal Pod Autoscaler
 
 ## 📋 Prerequisites
 
@@ -162,6 +165,8 @@ docker-compose down
 
 ## 📚 Documentation
 
+- **[Kubernetes Setup](KUBERNETES_SETUP.md)** - Complete Kubernetes deployment guide
+- **[Helm Charts](helm/README.md)** - Simplified deployment with Helm
 - **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
 - **[CI/CD Setup](CI-CD-SETUP.md)** - GitHub Actions pipeline configuration
 - **[Frontend Enhancements](FRONTEND_ENHANCEMENTS.md)** - UI/UX features documentation
@@ -259,7 +264,7 @@ npm run test:coverage
 
 ## 🚢 Deployment
 
-### Docker Deployment (Recommended)
+### Option 1: Docker Compose (Development)
 ```bash
 # Build and start
 docker-compose up -d
@@ -271,7 +276,20 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### Manual Deployment
+### Option 2: Kubernetes (Production - Recommended)
+```bash
+# Quick deploy
+cd k8s
+chmod +x deploy.sh
+./deploy.sh
+
+# Or use Helm
+helm install buyindiax ./helm/buyindiax -n buyindiax --create-namespace
+```
+
+See [KUBERNETES_SETUP.md](KUBERNETES_SETUP.md) for complete guide.
+
+### Option 3: Manual Deployment
 See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ### CI/CD Pipeline

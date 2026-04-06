@@ -1,0 +1,121 @@
+# BuyIndiaX Application Deployment
+# Main Node.js + React application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buyindiax-app
+  namespace: buyindiax
+  labels:
+    app: buyindiax-app
+spec:
+  replicas: 3  # 3 instances for high availability
+  selector:
+    matchLabels:
+      app: buyindiax-app
+  template:
+    metadata:
+      labels:
+        app: buyindiax-app
+    spec:
+      containers:
+      - name: buyindiax
+        image: sumant3086/buyindiax:latest  # Your Docker image
+        ports:
+        - containerPort: 5000  # Application port
+        env:
+        # Node environment
+        - name: NODE_ENV
+          value: "production"
+        
+        # Server port
+        - name: PORT
+          value: "5000"
+        
+        # MongoDB connection string
+        - name: MONGODB_URI
+          value: "mongodb://admin:$(MONGODB_PASSWORD)@mongodb:27017/buyindiax?authSource=admin"
+        
+        # MongoDB password from secret
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        
+        # JWT secret from secret
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: JWT_SECRET
+        
+        # Razorpay credentials from secret
+        - name: RAZORPAY_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: RAZORPAY_KEY_ID
+        
+        - name: RAZORPAY_KEY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: RAZORPAY_KEY_SECRET
+        
+        # Google AI API key from secret
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: GOOGLE_API_KEY
+        
+        # Email configuration from secret
+        - name: EMAIL_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: EMAIL_USER
+        
+        - name: EMAIL_PASS
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: EMAIL_PASS
+        
+        # Health check probes
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        
+        # Resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+# Application Service - Exposes app to internet
+apiVersion: v1
+kind: Service
+metadata:
+  name: buyindiax-service
+  namespace: buyindiax
+spec:
+  selector:
+    app: buyindiax-app
+  ports:
+  - port: 80  # External port
+    targetPort: 5000  # Container port
+  type: LoadBalancer  # Creates external load balancer
