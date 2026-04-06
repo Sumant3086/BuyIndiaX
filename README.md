@@ -2,7 +2,6 @@
 
 A full-stack, production-ready e-commerce platform built with the MERN stack, featuring real-time notifications, AI-powered recommendations, and enterprise-grade security.
 
-[![CI/CD](https://github.com/Sumant3086/BuyIndiaX/workflows/CI%2FCD/badge.svg)](https://github.com/Sumant3086/BuyIndiaX/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 🚀 Features
