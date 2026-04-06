@@ -4,6 +4,12 @@ A full-stack, production-ready e-commerce platform built with the MERN stack, fe
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+## 🌐 Live Demo
+
+**[Visit BuyIndiaX →](https://buyindiax.onrender.com/)**
+
+Experience the full-featured e-commerce platform in action!
+
 ## 🚀 Features
 
 ### Core Features
