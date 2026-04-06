@@ -10,6 +10,20 @@ A full-stack, production-ready e-commerce platform built with the MERN stack, fe
 
 Experience the full-featured e-commerce platform in action!
 
+## 📸 Screenshots
+
+### Home Page
+![Home Page](Home.png)
+
+### Shop by Category
+![Shop by Category](ShopByCategory.png)
+
+### Product Page
+![Product Page](product.png)
+
+### Admin Dashboard
+![Admin Dashboard](AdminDashboard.png)
+
 ## 🚀 Features
 
 ### Core Features
