@@ -1,8 +1,0 @@
-# Kubernetes Namespace - Isolates all BuyIndiaX resources
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: buyindiax
-  labels:
-    app: buyindiax
-    environment: production
