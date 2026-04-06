@@ -2,8 +2,8 @@
 
 A full-stack, production-ready e-commerce platform built with the MERN stack, featuring real-time notifications, AI-powered recommendations, and enterprise-grade security.
 
-[![CI/CD](https://github.com/sumant3086/buyindiax/workflows/CI-CD/badge.svg)](https://github.com/sumant3086/buyindiax/actions)
-[![Docker](https://img.shields.io/docker/v/sumant3086/buyindiax?label=docker)](https://hub.docker.com/r/sumant3086/buyindiax)
+[![CI/CD](https://github.com/Sumant3086/BuyIndiaX/workflows/CI%2FCD/badge.svg)](https://github.com/Sumant3086/BuyIndiaX/actions)
+[![Docker](https://img.shields.io/docker/cloud/build/sumant3086/buyindiax?label=docker)](https://hub.docker.com/r/sumant3086/buyindiax)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 🚀 Features
@@ -74,7 +74,7 @@ A full-stack, production-ready e-commerce platform built with the MERN stack, fe
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/sumant3086/buyindiax.git
+git clone https://github.com/Sumant3086/BuyIndiaX.git
 cd buyindiax
 ```
 
@@ -293,9 +293,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**Your Name**
-- GitHub: [@sumant3086](https://github.com/Sumant3086)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/Sumant3086)
+**Sumant**
+- GitHub: [@Sumant3086](https://github.com/Sumant3086)
+- LinkedIn: [Sumant](https://www.linkedin.com/in/sumant3086/)
 
 ## 🙏 Acknowledgments
 
