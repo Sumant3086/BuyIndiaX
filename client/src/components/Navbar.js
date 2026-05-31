@@ -22,8 +22,9 @@ const Navbar = () => {
     setIsUserMenuOpen(false);
   };
 
-  // Ensure cart is properly loaded
-  const cartItemsCount = cart?.items?.filter(item => item?.product)?.length || 0;
+  // Show total quantity (e.g., 3×apples + 2×bread = 5), not distinct product count
+  const cartItemsCount = cart?.itemCount ||
+    cart?.items?.filter(i => i?.product).reduce((s, i) => s + (i.quantity || 0), 0) || 0;
 
   const closeSidebar = () => setIsSidebarOpen(false);
 

@@ -1,294 +1,172 @@
-import React, { useState, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useCallback, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHeart, FaShoppingCart, FaEye, FaExchangeAlt, FaRegHeart } from 'react-icons/fa';
+import { FaHeart, FaShoppingCart, FaRegHeart, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
-import toast from '../utils/toast';
+import api from '../utils/api';
+import { showToast } from '../utils/toast';
 import './ProductCard.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const formatPrice = (p) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p);
 
-const ProductCard = ({ product, onQuickView, onCompare }) => {
+// Static star rating — no animations, pure CSS, accessible
+const StarRating = memo(({ rating, count }) => {
+  const stars = Array.from({ length: 5 }, (_, i) => {
+    if (rating >= i + 1) return <FaStar key={i} className="star-filled" aria-hidden="true" />;
+    if (rating >= i + 0.5) return <FaStarHalfAlt key={i} className="star-half" aria-hidden="true" />;
+    return <FaRegStar key={i} className="star-empty" aria-hidden="true" />;
+  });
+  return (
+    <div className="product-rating" aria-label={`${rating} out of 5 stars, ${count} reviews`}>
+      <div className="stars" role="img">{stars}</div>
+      {count > 0 && <span className="rating-count">({count})</span>}
+    </div>
+  );
+});
+
+const ProductCard = memo(({ product, onQuickView, onCompare }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const { addToCart } = useContext(CartContext);
-  const { user } = useContext(AuthContext);
+  const [imgError, setImgError] = useState(false);
+  const { addToCart } = React.useContext(CartContext);
+  const { user } = React.useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleAddToCart = async (e) => {
+  const discountPct = product.discount ||
+    (product.originalPrice > product.price
+      ? Math.round((1 - product.price / product.originalPrice) * 100) : 0);
+
+  const isOutOfStock = product.stock === 0;
+  const isLowStock = !isOutOfStock && product.stock < 10;
+
+  const handleAddToCart = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!user) {
-      toast.warning('Please login to add items to cart');
-      navigate('/login');
-      return;
-    }
-
+    if (!user) { showToast('Please login to add items to cart', 'warning'); navigate('/login'); return; }
     try {
       await addToCart(product._id, 1);
-      toast.success('Added to cart! 🛒');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add to cart');
+      showToast('Added to cart', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not add to cart', 'error');
     }
-  };
+  }, [user, addToCart, product._id, navigate]);
 
-  const handleWishlist = async (e) => {
+  const handleWishlist = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!user) {
-      toast.warning('Please login to add to wishlist');
-      navigate('/login');
-      return;
-    }
-
+    if (!user) { showToast('Please login to save items', 'warning'); navigate('/login'); return; }
     try {
-      const token = localStorage.getItem('token');
       if (isWishlisted) {
-        await axios.delete(`${API_URL}/wishlist/${product._id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/wishlist/${product._id}`);
         setIsWishlisted(false);
-        toast.info('Removed from wishlist');
       } else {
-        await axios.post(
-          `${API_URL}/wishlist/add`,
-          { productId: product._id },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.post('/wishlist/add', { productId: product._id });
         setIsWishlisted(true);
-        toast.success('Added to wishlist! ❤️');
+        showToast('Saved to wishlist', 'success');
       }
-    } catch (error) {
-      toast.error('Failed to update wishlist');
-    }
-  };
+    } catch { showToast('Could not update wishlist', 'error'); }
+  }, [user, isWishlisted, product._id, navigate]);
 
-  const handleQuickView = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onQuickView) onQuickView(product);
-  };
-
-  const handleCompare = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onCompare) onCompare(product);
-  };
-
-  const discountPercentage = product.discount || 
-    (product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0);
-
-  const isLowStock = product.stock > 0 && product.stock < 10;
-  const isOutOfStock = product.stock === 0;
+  const imgSrc = !imgError && product.image ? product.image : `https://placehold.co/300x300/f1f5f9/94a3b8?text=${encodeURIComponent(product.name?.slice(0, 10) || 'Product')}`;
 
   return (
-    <motion.div
-      className="product-card"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      transition={{ duration: 0.3 }}
-    >
-      <Link to={`/products/${product._id}`} className="product-card-link">
-        {/* Image Container */}
+    <article className="product-card">
+      <Link to={`/products/${product._id}`} className="product-card-link" aria-label={product.name}>
         <div className="product-image-container">
           {/* Badges */}
-          <div className="product-badges">
-            {discountPercentage > 0 && (
-              <motion.span
-                className="badge badge-discount"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 200 }}
-              >
-                {discountPercentage}% OFF
-              </motion.span>
-            )}
-            {product.isFeatured && (
-              <motion.span
-                className="badge badge-featured"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                ⭐ Featured
-              </motion.span>
-            )}
-            {product.isFlashSale && (
-              <motion.span
-                className="badge badge-flash"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                ⚡ Flash Sale
-              </motion.span>
-            )}
-          </div>
+          {(discountPct > 0 || product.isFeatured || product.isFlashSale) && (
+            <div className="product-badges" aria-label="Product badges">
+              {discountPct > 0 && <span className="badge badge-discount">{discountPct}% OFF</span>}
+              {product.isFlashSale && <span className="badge badge-flash">Flash Sale</span>}
+              {product.isFeatured && !product.isFlashSale && <span className="badge badge-featured">Featured</span>}
+            </div>
+          )}
 
-          {/* Image */}
-          <div className="product-image-wrapper">
-            {!imageLoaded && (
-              <div className="image-skeleton shimmer-effect" />
-            )}
-            <motion.img
-              src={product.image}
-              alt={product.name}
-              className="product-image"
-              style={{ display: imageLoaded ? 'block' : 'none' }}
-              onLoad={() => setImageLoaded(true)}
-              whileHover={{ scale: 1.1 }}
-              transition={{ duration: 0.4 }}
-            />
-          </div>
+          <img
+            src={imgSrc}
+            alt={product.name}
+            className="product-image"
+            loading="lazy"
+            decoding="async"
+            width="300"
+            height="300"
+            onError={() => setImgError(true)}
+          />
 
-          {/* Quick Actions */}
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                className="quick-actions"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <motion.button
-                  className="quick-action-btn"
-                  onClick={handleQuickView}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  title="Quick View"
-                >
-                  <FaEye />
-                </motion.button>
-                <motion.button
-                  className="quick-action-btn"
-                  onClick={handleCompare}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  title="Compare"
-                >
-                  <FaExchangeAlt />
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Wishlist Button */}
-          <motion.button
-            className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
-            onClick={handleWishlist}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <AnimatePresence mode="wait">
-              {isWishlisted ? (
-                <motion.div
-                  key="filled"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  <FaHeart />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="outline"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  <FaRegHeart />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
-
-          {/* Stock Status */}
           {isOutOfStock && (
-            <div className="stock-overlay">
+            <div className="stock-overlay" aria-label="Out of stock">
               <span>Out of Stock</span>
             </div>
           )}
+
+          {/* Quick actions — CSS hover only, no JS state */}
+          <div className="quick-actions" role="group" aria-label="Quick actions">
+            {onQuickView && (
+              <button
+                className="quick-action-btn"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }}
+                aria-label={`Quick view ${product.name}`}
+                title="Quick View"
+              >
+                👁
+              </button>
+            )}
+            {onCompare && (
+              <button
+                className="quick-action-btn"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCompare(product); }}
+                aria-label={`Compare ${product.name}`}
+                title="Compare"
+              >
+                ⇄
+              </button>
+            )}
+          </div>
+
+          {/* Wishlist */}
+          <button
+            className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
+            onClick={handleWishlist}
+            aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+            aria-pressed={isWishlisted}
+          >
+            {isWishlisted ? <FaHeart aria-hidden="true" /> : <FaRegHeart aria-hidden="true" />}
+          </button>
         </div>
 
-        {/* Product Info */}
         <div className="product-info">
-          {/* Brand */}
-          {product.brand && (
-            <span className="product-brand">{product.brand}</span>
-          )}
-
-          {/* Name */}
+          {product.brand && <span className="product-brand">{product.brand}</span>}
           <h3 className="product-name">{product.name}</h3>
+          <StarRating rating={product.rating || 0} count={product.numReviews || 0} />
 
-          {/* Rating */}
-          <div className="product-rating">
-            <div className="stars">
-              {[...Array(5)].map((_, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={i < Math.round(product.rating) ? 'star-filled' : 'star-empty'}
-                >
-                  ⭐
-                </motion.span>
-              ))}
-            </div>
-            <span className="rating-count">({product.numReviews})</span>
-          </div>
-
-          {/* Price */}
           <div className="product-price-section">
-            <div className="price-container">
-              <span className="current-price">₹{product.price.toLocaleString()}</span>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <span className="original-price">₹{product.originalPrice.toLocaleString()}</span>
-              )}
-            </div>
+            <span className="current-price">{formatPrice(product.price)}</span>
+            {product.originalPrice > product.price && (
+              <span className="original-price">
+                <del>{formatPrice(product.originalPrice)}</del>
+              </span>
+            )}
           </div>
 
-          {/* Stock Warning */}
           {isLowStock && (
-            <motion.div
-              className="stock-warning"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <motion.span
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                ⚠️
-              </motion.span>
-              Only {product.stock} left!
-            </motion.div>
+            <p className="stock-warning" role="status">
+              Only {product.stock} left in stock
+            </p>
           )}
-
-          {/* Add to Cart Button */}
-          <motion.button
-            className="add-to-cart-btn"
-            onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <FaShoppingCart />
-            <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
-          </motion.button>
         </div>
       </Link>
-    </motion.div>
-  );
-};
 
+      <button
+        className={`add-to-cart-btn ${isOutOfStock ? 'out-of-stock' : ''}`}
+        onClick={handleAddToCart}
+        disabled={isOutOfStock}
+        aria-label={isOutOfStock ? `${product.name} is out of stock` : `Add ${product.name} to cart`}
+      >
+        <FaShoppingCart aria-hidden="true" />
+        <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
+      </button>
+    </article>
+  );
+});
+
+ProductCard.displayName = 'ProductCard';
 export default ProductCard;

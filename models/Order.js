@@ -23,6 +23,12 @@ const orderItemSchema = new mongoose.Schema({
 });
 
 const orderSchema = new mongoose.Schema({
+  orderNumber: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -34,7 +40,8 @@ const orderSchema = new mongoose.Schema({
     city: { type: String, required: true },
     state: { type: String, required: true },
     zipCode: { type: String, required: true },
-    country: { type: String, required: true }
+    country: { type: String, required: true },
+    phone: String
   },
   paymentMethod: {
     type: String,
@@ -81,11 +88,12 @@ const orderSchema = new mongoose.Schema({
   deliveredAt: Date,
   status: {
     type: String,
-    enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'],
+    enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded', 'Return Requested', 'Return Approved'],
     default: 'Pending'
   },
   trackingNumber: String,
   estimatedDelivery: Date,
+  shippedAt: Date,
   statusHistory: [{
     status: String,
     timestamp: {
@@ -95,11 +103,34 @@ const orderSchema = new mongoose.Schema({
     note: String
   }],
   cancellationReason: String,
+  cancelledAt: Date,
   refundAmount: Number,
   refundStatus: {
     type: String,
     enum: ['none', 'pending', 'processed', 'failed'],
     default: 'none'
+  },
+  // Return request details
+  returnRequest: {
+    status: {
+      type: String,
+      enum: ['Requested', 'Approved', 'Rejected', 'Received', 'Completed']
+    },
+    reason: String,
+    items: [mongoose.Schema.Types.ObjectId], // Item IDs being returned
+    requestedAt: Date,
+    approvedAt: Date,
+    refundMethod: {
+      type: String,
+      enum: ['original_payment', 'store_credit', 'exchange']
+    }
+  },
+  // Refund details
+  refund: {
+    amount: Number,
+    method: String,
+    processedAt: Date,
+    status: String
   },
   giftWrap: {
     type: Boolean,
@@ -119,5 +150,7 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ isPaid: 1 });
+orderSchema.index({ createdAt: -1 }); // For date range queries
+orderSchema.index({ 'items.product': 1 }); // For product-based queries
 
 module.exports = mongoose.model('Order', orderSchema);

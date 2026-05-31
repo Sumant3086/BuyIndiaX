@@ -1,23 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../utils/api';
 import { showToast } from '../utils/toast';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Fetch cart
 export const useCart = () => {
-  const token = localStorage.getItem('token');
-  
   return useQuery({
     queryKey: ['cart'],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_URL}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const { data } = await api.get('/cart');
       return data;
     },
-    enabled: !!token,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    enabled: !!localStorage.getItem('token'),
+    staleTime: 1000 * 60 * 2,
   });
 };
 
@@ -27,12 +21,7 @@ export const useAddToCart = () => {
   
   return useMutation({
     mutationFn: async ({ productId, quantity }) => {
-      const token = localStorage.getItem('token');
-      const { data } = await axios.post(
-        `${API_URL}/cart`,
-        { productId, quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await api.post('/cart', { productId, quantity });
       return data;
     },
     onSuccess: (data) => {
@@ -57,12 +46,7 @@ export const useUpdateCartItem = () => {
   
   return useMutation({
     mutationFn: async ({ itemId, quantity }) => {
-      const token = localStorage.getItem('token');
-      const { data } = await axios.put(
-        `${API_URL}/cart/${itemId}`,
-        { quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await api.put(`/cart/${itemId}`, { quantity });
       return data;
     },
     onSuccess: (data) => {
@@ -85,10 +69,7 @@ export const useRemoveFromCart = () => {
   
   return useMutation({
     mutationFn: async (itemId) => {
-      const token = localStorage.getItem('token');
-      const { data } = await axios.delete(`${API_URL}/cart/${itemId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const { data } = await api.delete(`/cart/${itemId}`);
       return data;
     },
     onSuccess: (data) => {

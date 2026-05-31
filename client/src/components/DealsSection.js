@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import './DealsSection.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const DealsSection = () => {
   const [deals, setDeals] = useState([]);
@@ -14,7 +12,7 @@ const DealsSection = () => {
 
   const fetchDeals = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products/deals/list`);
+      const response = await api.get('/products/deals/list');
       setDeals(response.data);
     } catch (error) {
       console.error('Error fetching deals:', error);

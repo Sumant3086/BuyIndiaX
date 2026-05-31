@@ -1,15 +1,13 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import api from '../utils/api';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { FaShippingFast, FaCreditCard, FaLock } from 'react-icons/fa';
 import { showToast } from '../utils/toast';
 import { fadeInUp, slideIn } from '../theme/animations';
 import './Checkout.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const STEPS = [
   { id: 1, name: 'Shipping', icon: FaShippingFast },
@@ -42,14 +40,11 @@ const Checkout = () => {
     setShippingAddress({ ...shippingAddress, [e.target.name]: e.target.value });
   };
 
-  const calculateTotal = () => {
-    return cart.items.reduce((sum, item) => {
-      if (item.product && item.product.price) {
-        return sum + (item.product.price * item.quantity);
-      }
-      return sum;
-    }, 0);
-  };
+  // grandTotal from server includes GST preview; fall back to item sum
+  const calculateTotal = () =>
+    cart.grandTotal ||
+    cart.items.reduce((sum, item) =>
+      item.product?.price ? sum + item.product.price * item.quantity : sum, 0);
 
   const validateShipping = () => {
     const { street, city, state, zipCode, country, phone } = shippingAddress;
@@ -72,6 +67,14 @@ const Checkout = () => {
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
+      // Already loaded — don't add duplicate script tag
+      if (window.Razorpay) return resolve(true);
+      const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+      if (existing) {
+        existing.onload = () => resolve(true);
+        existing.onerror = () => resolve(false);
+        return;
+      }
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => resolve(true);
@@ -89,26 +92,12 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      
       // Create order from cart
-      const orderResponse = await axios.post(
-        `${API_URL}/orders`, 
-        { shippingAddress },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
+      const orderResponse = await api.post('/orders', { shippingAddress });
       const order = orderResponse.data;
 
       // Create Razorpay order
-      const paymentResponse = await axios.post(
-        `${API_URL}/payment/create-order`,
-        { 
-          orderId: order._id,
-          amount: calculateTotal()
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const paymentResponse = await api.post('/payment/create-order', { orderId: order._id });
 
       const { orderId: razorpayOrderId, amount, currency, keyId } = paymentResponse.data;
 
@@ -130,16 +119,12 @@ const Checkout = () => {
         order_id: razorpayOrderId,
         handler: async function (response) {
           try {
-            await axios.post(
-              `${API_URL}/payment/verify`,
-              {
-                orderId: order._id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature
-              },
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post('/payment/verify', {
+              orderId: order._id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            });
 
             await clearCart();
             showToast('Payment successful! 🎉', 'success');
@@ -175,9 +160,10 @@ const Checkout = () => {
         showToast(`Payment failed: ${response.error.description}`, 'error');
         setLoading(false);
       });
-      
+
       razorpayInstance.open();
-      setLoading(false);
+      // Do NOT call setLoading(false) here — the modal is open and payment is in progress.
+      // Loading is reset in ondismiss, payment.failed, and the verify handler.
 
     } catch (error) {
       console.error('Order creation error:', error);
@@ -417,16 +403,22 @@ const Checkout = () => {
                     <div className="payment-summary">
                       <div className="summary-row">
                         <span>Subtotal ({validItems.length} items)</span>
-                        <span>₹{calculateTotal().toLocaleString()}</span>
+                        <span>₹{(cart.subtotal || 0).toLocaleString()}</span>
                       </div>
+                      {cart.gst?.totalGST > 0 && (
+                        <div className="summary-row">
+                          <span>GST</span>
+                          <span>₹{Math.round(cart.gst.totalGST).toLocaleString()}</span>
+                        </div>
+                      )}
                       <div className="summary-row">
                         <span>Shipping</span>
                         <span className="free">FREE</span>
                       </div>
                       <div className="summary-divider"></div>
                       <div className="summary-row total">
-                        <span>Total Amount</span>
-                        <span>₹{calculateTotal().toLocaleString()}</span>
+                        <span>Total Amount (incl. GST)</span>
+                        <span>₹{Math.round(calculateTotal()).toLocaleString()}</span>
                       </div>
                     </div>
 
@@ -510,16 +502,22 @@ const Checkout = () => {
               <div className="order-total">
                 <div className="total-row">
                   <span>Subtotal</span>
-                  <span>₹{calculateTotal().toLocaleString()}</span>
+                  <span>₹{(cart.subtotal || 0).toLocaleString()}</span>
                 </div>
+                {cart.gst?.totalGST > 0 && (
+                  <div className="total-row">
+                    <span>GST</span>
+                    <span>₹{Math.round(cart.gst.totalGST).toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="total-row">
                   <span>Shipping</span>
                   <span className="free">FREE</span>
                 </div>
                 <div className="total-divider"></div>
                 <div className="total-row final">
-                  <span>Total</span>
-                  <span>₹{calculateTotal().toLocaleString()}</span>
+                  <span>Total (incl. GST)</span>
+                  <span>₹{Math.round(calculateTotal()).toLocaleString()}</span>
                 </div>
               </div>
             </div>

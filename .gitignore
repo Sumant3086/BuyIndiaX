@@ -33,6 +33,11 @@ secrets.json
 *.ppk
 *.p12
 *.pfx
+GRAFANA_CREDENTIALS.txt
+
+# Kubernetes secrets with real values (commit only the template above)
+k8s/secrets.yaml.local
+k8s/secrets-real.yaml
 
 # Database files
 *.db

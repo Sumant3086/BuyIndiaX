@@ -1,0 +1,11 @@
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: buyindiax-config
+  namespace: buyindiax
+data:
+  NODE_ENV: "production"
+  PORT: "5000"
+  CORS_ORIGIN: "http://buyindiax.local"
+  MONGODB_URI: "mongodb://mongodb-service:27017/buyindiax"

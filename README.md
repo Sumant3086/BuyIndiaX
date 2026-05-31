@@ -1,352 +1,286 @@
-# 🛍️ BuyIndiaX - Enterprise E-Commerce Platform
-
-A full-stack, production-ready e-commerce platform built with the MERN stack, featuring real-time notifications, AI-powered recommendations, and enterprise-grade security.
-
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-## 🌐 Live Demo
-
-**[Visit BuyIndiaX →](https://buyindiax.onrender.com/)**
-
-Experience the full-featured e-commerce platform in action!
-
-## 📸 Screenshots
-
-### Home Page
-![Home Page](Home.png)
-
-### Shop by Category
-![Shop by Category](ShopByCategory.png)
-
-### Product Page
-![Product Page](product.png)
-
-### Admin Dashboard
-![Admin Dashboard](AdminDashboard.png)
-
-## 🚀 Features
-
-### Core Features
-- 🛒 **Complete E-Commerce Flow** - Browse, cart, checkout, payment, order tracking
-- 💳 **Payment Integration** - Razorpay payment gateway with test mode
-- 🔐 **Authentication & Authorization** - JWT-based auth with role-based access
-- 📦 **Order Management** - Real-time order tracking with timeline visualization
-- ⭐ **Reviews & Ratings** - Product reviews with image upload support
-- ❤️ **Wishlist** - Save favorite products
-- 🔍 **Advanced Search** - Autocomplete with search history and suggestions
-- 🎯 **Product Comparison** - Side-by-side product comparison
-
-### Advanced Features
-- 🤖 **AI Chatbot** - Google Gemini AI-powered customer support
-- 🔔 **Real-Time Notifications** - Socket.IO for instant updates
-- 📊 **Analytics Dashboard** - Sales, revenue, and user behavior tracking
-- 🎁 **Coupon System** - Discount codes and promotional offers
-- 🏆 **Loyalty Program** - Points system with tiered memberships
-- 📈 **Recommendation Engine** - Collaborative filtering for personalized suggestions
-- 🌓 **Dark/Light Theme** - Smooth theme switching with persistence
-- 📱 **Fully Responsive** - Mobile-first design
-
-### Admin Features
-- 📊 **Admin Dashboard** - Real-time analytics and insights
-- 📦 **Product Management** - CRUD operations with bulk CSV import/export
-- 👥 **Customer Management** - User analytics and segmentation
-- 📋 **Order Management** - Status updates and order processing
-- 📉 **Sales Analytics** - Visual charts and reports
-- 🔔 **Low Stock Alerts** - Automated inventory notifications
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose ODM
-- **Cache**: Redis (optional)
-- **Authentication**: JWT (JSON Web Tokens)
-- **Payment**: Razorpay
-- **AI**: Google Gemini API
-- **Real-time**: Socket.IO
-- **Email**: Nodemailer
-
-### Frontend
-- **Framework**: React 19
-- **Routing**: React Router v7
-- **State Management**: Context API
-- **Animations**: Framer Motion
-- **Icons**: React Icons
-- **HTTP Client**: Axios
-
-### DevOps & Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **Orchestration**: Kubernetes with Helm
-- **Monitoring**: Prometheus & Grafana
-- **CI/CD**: GitHub Actions
-- **Security Scanning**: Trivy
-- **Code Quality**: ESLint, SonarCloud
-- **Auto-scaling**: Horizontal Pod Autoscaler
-
-## 📋 Prerequisites
-
-- Node.js 18+ and npm
-- MongoDB 6.0+
-- Docker & Docker Compose (for containerized deployment)
-- Git
-
-## 🚀 Quick Start
-
-### 1. Clone Repository
-```bash
-git clone https://github.com/Sumant3086/BuyIndiaX.git
-cd buyindiax
-```
-
-### 2. Install Dependencies
-```bash
-# Backend dependencies
-npm install
-
-# Frontend dependencies
-cd client
-npm install
-cd ..
-```
-
-### 3. Environment Setup
-```bash
-# Copy example env file
-cp .env.example .env
-
-# Edit .env with your configuration
-nano .env
-```
-
-Required environment variables:
-```env
-# Server
-NODE_ENV=development
-PORT=5000
-
-# Database
-MONGODB_URI=mongodb://localhost:27017/buyindiax
-
-# JWT
-JWT_SECRET=your_super_secret_jwt_key
-
-# Razorpay (Test Keys)
-RAZORPAY_KEY_ID=rzp_test_SZT2as0qsWZtkR
-RAZORPAY_KEY_SECRET=uJLKwIAhb6JcXu2PWIoBzHhC
-
-# Google AI
-GOOGLE_API_KEY=your_google_api_key
-
-# Email (Optional)
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
-```
-
-### 4. Seed Database (Optional)
-```bash
-node scripts/seedProducts.js
-```
-
-### 5. Run Application
-
-#### Development Mode:
-```bash
-# Start backend (port 5000)
-npm run dev
-
-# Start frontend (port 3000) - in another terminal
-cd client
-npm start
-```
-
-#### Production Mode:
-```bash
-# Build frontend
-cd client
-npm run build
-cd ..
-
-# Start server
-npm start
-```
-
-#### Docker Mode:
-```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-## 📚 Documentation
-
-- **[Kubernetes Setup](KUBERNETES_SETUP.md)** - Complete Kubernetes deployment guide
-- **[Helm Charts](helm/README.md)** - Simplified deployment with Helm
-- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
-- **[CI/CD Setup](CI-CD-SETUP.md)** - GitHub Actions pipeline configuration
-- **[Frontend Enhancements](FRONTEND_ENHANCEMENTS.md)** - UI/UX features documentation
-
-## 🏗️ Project Structure
-
-```
-buyindiax/
-├── client/                 # React frontend
-│   ├── public/            # Static files
-│   └── src/
-│       ├── components/    # Reusable components
-│       ├── context/       # Context providers
-│       ├── pages/         # Page components
-│       ├── theme/         # Theme & animations
-│       └── utils/         # Utility functions
-├── middleware/            # Express middleware
-├── models/               # MongoDB models
-├── routes/               # API routes
-├── scripts/              # Utility scripts
-├── utils/                # Backend utilities
-├── .github/              # GitHub Actions workflows
-├── docker-compose.yml    # Docker orchestration
-├── Dockerfile           # Docker image definition
-└── server.js            # Express server entry point
-```
-
-## 🔒 Security Features
-
-- ✅ **JWT Authentication** - Secure token-based auth
-- ✅ **Password Hashing** - bcrypt with salt rounds
-- ✅ **Rate Limiting** - Per-user and IP-based limits
-- ✅ **Input Sanitization** - XSS and NoSQL injection prevention
-- ✅ **Security Headers** - Helmet.js with CSP
-- ✅ **CORS Configuration** - Controlled cross-origin requests
-- ✅ **SQL Injection Prevention** - Pattern detection
-- ✅ **Secure Payment** - PCI-DSS compliant Razorpay integration
-
-## 🎨 UI/UX Features
-
-- ✨ **3D Animations** - Parallax scrolling and 3D transforms
-- 🎭 **Glassmorphism** - Modern frosted glass effects
-- 🌊 **Smooth Transitions** - Framer Motion animations
-- 📱 **Mobile Responsive** - Touch-friendly interactions
-- ♿ **Accessible** - ARIA labels and keyboard navigation
-- 🎨 **Theme System** - Dark/light mode with smooth transitions
-- ⚡ **Performance Optimized** - Code splitting and lazy loading
-
-## 📊 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user
-
-### Products
-- `GET /api/products` - Get all products
-- `GET /api/products/:id` - Get product by ID
-- `GET /api/products/search` - Search products
-- `POST /api/products` - Create product (Admin)
-- `PUT /api/products/:id` - Update product (Admin)
-- `DELETE /api/products/:id` - Delete product (Admin)
-
-### Orders
-- `POST /api/orders` - Create order
-- `GET /api/orders` - Get user orders
-- `GET /api/orders/:id` - Get order by ID
-- `PUT /api/orders/admin/:id/status` - Update order status (Admin)
-
-### Cart
-- `GET /api/cart` - Get user cart
-- `POST /api/cart/add` - Add item to cart
-- `PUT /api/cart/update/:id` - Update cart item
-- `DELETE /api/cart/remove/:id` - Remove from cart
-
-### Payment
-- `POST /api/payment/create-order` - Create Razorpay order
-- `POST /api/payment/verify` - Verify payment
-
-[See full API documentation](docs/API.md)
-
-## 🧪 Testing
-
-```bash
-# Run backend tests
-npm test
-
-# Run frontend tests
-cd client
-npm test
-
-# Run with coverage
-npm run test:coverage
-```
-
-## 🚢 Deployment
-
-### Option 1: Docker Compose (Development)
-```bash
-# Build and start
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop
-docker-compose down
-```
-
-### Option 2: Kubernetes (Production - Recommended)
-```bash
-# Quick deploy
-cd k8s
-chmod +x deploy.sh
-./deploy.sh
-
-# Or use Helm
-helm install buyindiax ./helm/buyindiax -n buyindiax --create-namespace
-```
-
-See [KUBERNETES_SETUP.md](KUBERNETES_SETUP.md) for complete guide.
-
-### Option 3: Manual Deployment
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
-
-### CI/CD Pipeline
-Automated deployment via GitHub Actions. See [CI-CD-SETUP.md](CI-CD-SETUP.md).
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-**Sumant**
-- GitHub: [@Sumant3086](https://github.com/Sumant3086)
-- LinkedIn: [Sumant](https://www.linkedin.com/in/sumant3086/)
-
-## 🙏 Acknowledgments
-
-- Razorpay for payment gateway
-- Google for Gemini AI API
-- MongoDB for database
-- React team for amazing framework
-- Framer Motion for animations
-
-## 📞 Support
-
-For support, email support@buyindiax.com or open an issue on GitHub.
+<div align="center">
+
+<h1>BuyIndiaX</h1>
+<p><strong>Unified Omnichannel Retail Platform for Indian Businesses</strong></p>
+
+<p>
+  <img src="https://img.shields.io/badge/Version-2.1.0-2563eb?style=flat-square" />
+  <img src="https://img.shields.io/badge/Status-Live%20%26%20Deployed-16a34a?style=flat-square" />
+  <img src="https://img.shields.io/badge/Platform-Web%20%7C%20POS%20%7C%20Admin-7c3aed?style=flat-square" />
+  <img src="https://img.shields.io/badge/Market-Indian%20Retail-f97316?style=flat-square" />
+  <img src="https://img.shields.io/badge/GST-Compliant-dc2626?style=flat-square" />
+</p>
+
+<p>
+  <a href="https://buyindiax.onrender.com" target="_blank"><strong>→ Live Demo</strong></a>
+</p>
+
+</div>
 
 ---
 
-**⭐ Star this repo if you find it helpful!**
+## The Problem
 
-Made with ❤️ by Sumant
+Indian retail is fragmented. A typical store owner today manages their physical store through one system, their online orders through another, their inventory through a spreadsheet, and their billing through yet another piece of software. These disconnected tools create blind spots — overselling, stock-outs, missed revenue, and poor customer experience.
+
+**BuyIndiaX solves this by bringing everything under one platform.**
+
+---
+
+## What BuyIndiaX Does
+
+BuyIndiaX is an **omnichannel retail management platform** built specifically for Indian businesses. It connects the two sides of modern retail — the online storefront customers see, and the operational backbone that runs the business — into a single, unified system.
+
+A business running on BuyIndiaX gets:
+
+- A **customer-facing e-commerce store** where shoppers discover, compare, and buy products
+- A **point-of-sale (POS) terminal** for billing in-store customers with the same inventory
+- A **real-time inventory system** that prevents overselling across both channels
+- A **financial analytics dashboard** that tells owners exactly what's selling, what's not, and why
+- **Full GST compliance** with automatic tax calculation on every transaction
+- **Supplier and procurement management** to handle the supply side of the business
+
+All of this, from one login.
+
+---
+
+## Who It's Built For
+
+| Audience | What BuyIndiaX Gives Them |
+|---|---|
+| **Small & Mid-Size Retailers** | Replace 4 different tools with one unified platform |
+| **D2C Brands** | Launch online with built-in inventory control and order management |
+| **Grocery / FMCG Stores** | FIFO/FEFO batch tracking, expiry alerts, barcode scanning |
+| **Multi-Store Businesses** | Centralized inventory, inter-store transfers, consolidated reporting |
+| **B2B Wholesalers** | Wholesale pricing tiers, purchase orders, supplier management |
+
+---
+
+## Core Capabilities
+
+### Omnichannel Retail
+Customers shop online while store staff bills walk-in customers through the POS terminal — and the inventory stays accurate across both. One sale from either channel immediately reduces the available stock everywhere.
+
+### Intelligent Inventory
+The platform tracks every unit through its full lifecycle: when it arrived, what it cost, when it expires, and how fast it's selling. It uses FIFO (first-in, first-out) logic for perishables, sends low-stock alerts before stockouts happen, and generates automatic purchase orders when reorder points are reached.
+
+### Real-Time Operations
+Every stock change, order update, and payment confirmation propagates instantly to all connected screens via WebSocket. A store manager sees live inventory. A cashier sees live product availability. A customer sees live order status.
+
+### GST-Ready Financial Engine
+Every transaction — online or in-store — calculates the correct Indian GST (CGST + SGST for intra-state, IGST for inter-state) based on HSN codes and product categories. Tax breakdowns are embedded in every invoice and order.
+
+### Business Intelligence
+The analytics dashboard shows revenue trends, ABC product classification (which 20% of SKUs generate 80% of revenue), demand forecasting, category performance, and return summaries — giving owners the same insights that large retail chains pay enterprise software to provide.
+
+---
+
+## Platform Walkthrough
+
+### For Customers
+A customer visits the online store, searches for products using text or category filters, and sees real-time stock availability. The cart automatically shows GST-inclusive totals. Checkout is powered by Razorpay — supporting UPI, cards, net banking, and wallets. After payment, the customer receives order confirmation, can track their shipment, and earns loyalty points toward future purchases. An AI assistant (powered by Google Gemini) answers product and order questions at any time.
+
+### For Store Staff
+The POS terminal opens with a shift session. Staff search for products by name, barcode, or SKU. Items are added to the billing cart, payment is accepted (cash, UPI, or card), and a GST invoice is generated instantly. Each sale is linked to the shift session and feeds into the end-of-day summary.
+
+### For Business Owners & Managers
+The admin dashboard surfaces everything that matters: today's revenue, pending orders, low-stock alerts, top-performing products, and customer acquisition trends. Orders can be updated, refunds can be processed, and inventory can be adjusted — all from one screen. The returns management system handles RMA requests, inspection, restocking, and refunds through a structured workflow.
+
+### For Supply Chain
+Purchase orders are raised to suppliers through the platform. When goods arrive, a Goods Received Note (GRN) is created, which automatically adds new inventory batches, updates stock levels, and creates records for FIFO/FEFO tracking.
+
+---
+
+## Business Impact
+
+| Metric | Impact |
+|---|---|
+| **Overselling Prevention** | Stock reservation system locks inventory during active checkouts |
+| **Inventory Accuracy** | Real-time sync across online store and POS eliminates manual reconciliation |
+| **Tax Compliance** | Automatic GST calculation eliminates manual tax errors on every bill |
+| **Operational Speed** | POS billing handles high-volume in-store transactions with sub-second response |
+| **Revenue Visibility** | ABC analysis and demand forecasting surface actionable insights immediately |
+| **Customer Retention** | Loyalty points, wishlist, and personalized recommendations drive repeat purchases |
+
+---
+
+## Architecture Overview
+
+BuyIndiaX follows a clean two-tier architecture: a **React frontend** that handles all user interaction, and a **Node.js/Express API** that manages data, business logic, and real-time events.
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  Customer Browser                    │
+│          E-Commerce Store  ·  Order Tracking         │
+└─────────────────────┬───────────────────────────────┘
+                      │ HTTPS
+┌─────────────────────▼───────────────────────────────┐
+│                Admin / POS Interface                 │
+│    Dashboard  ·  POS Terminal  ·  Inventory Mgmt     │
+└─────────────────────┬───────────────────────────────┘
+                      │ REST API + WebSocket
+┌─────────────────────▼───────────────────────────────┐
+│                  Express API Server                  │
+│   Auth · Orders · Payments · Inventory · Analytics   │
+│         GST Engine · Job Queue · Webhooks            │
+└──────────┬─────────────┬──────────────┬─────────────┘
+           │             │              │
+    ┌──────▼──────┐ ┌────▼────┐ ┌──────▼──────┐
+    │   MongoDB   │ │  Redis  │ │  Razorpay   │
+    │  (Primary)  │ │ (Cache) │ │  (Payment)  │
+    └─────────────┘ └─────────┘ └─────────────┘
+```
+
+**Key design decisions:**
+- **Zero-dependency fallback:** The system runs without Redis — an in-memory LRU cache activates automatically, enabling zero-budget deployment
+- **Stock reservation:** A TTL-based lock prevents overselling during concurrent checkouts without requiring database transactions on every cart action
+- **Async job queue:** Email, notifications, and webhook delivery run in background queues that don't block payment responses
+- **Role-based access:** Admin, manager, inventory staff, sales staff, and support staff each have scoped permissions
+
+---
+
+## Feature Highlights
+
+**Customer Experience**
+- Full-text product search with relevance ranking
+- Product comparison across multiple SKUs
+- Wishlist with restock notifications
+- Real-time order tracking with status history
+- Loyalty points and membership tiers (Bronze → Platinum)
+- AI shopping assistant
+
+**Operations & Admin**
+- Live admin dashboard with revenue, orders, and inventory KPIs
+- Order lifecycle management with status history and customer notifications
+- Coupon and discount engine
+- Return/RMA workflow (request → approve → inspect → restock/refund)
+- Audit log for all admin actions
+- Webhook delivery to external systems (with HMAC signature verification)
+
+**Inventory & Supply Chain**
+- FIFO/FEFO batch tracking with expiry date management
+- Barcode generation (EAN-13 with India 890 prefix)
+- Multi-warehouse support with cold storage and dark store categories
+- Purchase order workflow with GRN (Goods Received Note)
+- Supplier management with performance metrics
+- Auto-reorder when stock hits minimum threshold
+
+**Financial & Compliance**
+- Full Indian GST engine: CGST, SGST, IGST based on HSN codes
+- ABC product classification (A/B/C tier by revenue contribution)
+- Weighted moving average demand forecasting
+- POS session management with cashier-level reporting
+- Revenue trend analysis with period-over-period comparison
+
+---
+
+## Technology Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Frontend** | React 19, Framer Motion, TanStack Query, Zustand | UI, animations, data fetching, state |
+| **Backend** | Node.js, Express | REST API, business logic |
+| **Database** | MongoDB Atlas | Primary data store |
+| **Cache** | Redis (+ in-memory fallback) | Session cache, rate limiting |
+| **Real-Time** | Socket.IO | Live order updates, notifications |
+| **Payments** | Razorpay | UPI, cards, net banking, wallets |
+| **AI** | Google Gemini | Shopping assistant |
+| **Security** | JWT, Helmet, bcrypt, rate limiting | Auth, headers, brute-force protection |
+| **Infra** | Docker, Kubernetes (optional) | Containerization, orchestration |
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><strong>Customer Storefront</strong></td>
+    <td><strong>Admin Dashboard</strong></td>
+  </tr>
+  <tr>
+    <td><em>Product discovery, search, cart, and checkout with real-time stock</em></td>
+    <td><em>Revenue overview, order management, inventory health, ABC analysis</em></td>
+  </tr>
+  <tr>
+    <td><strong>POS Terminal</strong></td>
+    <td><strong>Inventory Management</strong></td>
+  </tr>
+  <tr>
+    <td><em>Barcode-based billing, GST invoicing, shift session management</em></td>
+    <td><em>Batch tracking, expiry alerts, low-stock reports, purchase orders</em></td>
+  </tr>
+</table>
+
+---
+
+## Live Demo
+
+**Deployed Application:** [https://buyindiax.onrender.com](https://buyindiax.onrender.com)
+
+> The live instance runs on Render's free tier — allow 30–60 seconds for cold start on first load.
+
+**Explore the platform:**
+- Browse products and experience the customer checkout flow
+- Register an account to view orders and earn loyalty points
+- The AI assistant is active on every page
+
+---
+
+## Quick Start
+
+```bash
+# Clone and install
+git clone https://github.com/your-username/BuyIndiaX.git
+cd BuyIndiaX && npm install && npm run install-client
+
+# Configure environment (copy .env.example and fill in values)
+cp .env.example .env
+
+# Run in development (frontend + backend together)
+npm run dev:full
+```
+
+The only required services are MongoDB Atlas and Razorpay test keys. Redis and all other integrations are optional — the platform degrades gracefully without them.
+
+---
+
+## Roadmap
+
+**Near Term**
+- Mobile app (React Native) for customer shopping and store staff billing
+- WhatsApp order notifications via Twilio
+- Multi-language support (Hindi, Tamil, Telugu, Bengali)
+- Advanced coupon engine (BOGO, tiered discounts, referral codes)
+
+**Growth Stage**
+- Marketplace model — multiple sellers, single storefront
+- Delivery partner integration (Shiprocket, Delhivery) — API adapters already built
+- Customer segmentation and automated marketing campaigns
+- Subscription / recurring order support for grocery
+
+**Scale**
+- Microservices migration for high-traffic modules (inventory, payments)
+- Regional data residency for enterprise clients
+- White-label licensing for retail chains
+
+---
+
+## Contributing
+
+Contributions are welcome. The codebase follows consistent patterns throughout — Express routes for the API, React pages and components for the UI, and Mongoose models for data. Please open an issue before raising a PR for any significant change.
+
+---
+
+## License
+
+MIT — free to use, modify, and build upon.
+
+---
+
+<div align="center">
+
+**Built for Indian retail. Designed for scale.**
+
+*BuyIndiaX — where the store and the storefront are finally one.*
+
+</div>

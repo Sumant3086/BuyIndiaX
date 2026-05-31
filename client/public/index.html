@@ -3,17 +3,44 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#6366f1" />
-    <meta name="description" content="BuyIndiaX - Your trusted marketplace for quality products from India" />
-    <title>BuyIndiaX - Shop Quality Products from India</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <meta name="description" content="BuyIndiaX — Your trusted Indian marketplace for groceries, electronics, health & beauty and more. Fast delivery, genuine products." />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph defaults (overridden per-page by SEOMeta component) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BuyIndiaX" />
+    <meta property="og:title" content="BuyIndiaX — Your Trusted Indian Marketplace" />
+    <meta property="og:description" content="Shop groceries, electronics, health & beauty and more with fast delivery." />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <title>BuyIndiaX — Your Trusted Indian Marketplace</title>
+
+    <!-- Preconnect to external origins (LCP improvement) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.razorpay.com" />
+
+    <!-- Inter font — display=swap prevents FOIT -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Razorpay script loaded ONLY when checkout starts (in Checkout.js) to avoid
+      blocking the main thread. This tag is intentionally removed from here.
+    -->
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="padding:20px;text-align:center;font-family:sans-serif">
+        JavaScript is required to use BuyIndiaX. Please enable it in your browser settings.
+      </div>
+    </noscript>
     <div id="root"></div>
   </body>
 </html>

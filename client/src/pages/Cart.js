@@ -28,14 +28,11 @@ const Cart = () => {
     }
   };
 
-  const calculateTotal = () => {
-    return cart.items.reduce((sum, item) => {
-      if (item.product && item.product.price) {
-        return sum + (item.product.price * item.quantity);
-      }
-      return sum;
-    }, 0);
-  };
+  // Use grandTotal from server response (includes GST preview); fall back to item sum
+  const calculateTotal = () =>
+    cart.grandTotal ||
+    cart.items.reduce((sum, item) =>
+      item.product?.price ? sum + item.sellingPrice * item.quantity : sum, 0);
 
   if (loading) {
     return (
@@ -179,16 +176,22 @@ const Cart = () => {
             <h3>Order Summary</h3>
             <div className="summary-row">
               <span>Subtotal</span>
-              <span>₹{calculateTotal().toLocaleString()}</span>
+              <span>₹{(cart.subtotal || 0).toLocaleString()}</span>
             </div>
+            {cart.gst?.totalGST > 0 && (
+              <div className="summary-row">
+                <span>GST (est.)</span>
+                <span>₹{Math.round(cart.gst.totalGST).toLocaleString()}</span>
+              </div>
+            )}
             <div className="summary-row">
               <span>Shipping</span>
               <span className="free">FREE</span>
             </div>
             <div className="summary-divider"></div>
             <div className="summary-row total">
-              <span>Total</span>
-              <span>₹{calculateTotal().toLocaleString()}</span>
+              <span>Total (incl. GST)</span>
+              <span>₹{Math.round(calculateTotal()).toLocaleString()}</span>
             </div>
             <motion.button 
               onClick={() => navigate('/checkout')}

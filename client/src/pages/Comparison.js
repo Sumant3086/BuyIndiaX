@@ -2,13 +2,11 @@ import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FaTimes, FaShoppingCart } from 'react-icons/fa';
-import axios from 'axios';
+import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import toast from '../utils/toast';
 import './Comparison.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const Comparison = () => {
   const [comparison, setComparison] = useState(null);
@@ -27,10 +25,7 @@ const Comparison = () => {
 
   const fetchComparison = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/comparison`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/comparison');
       setComparison(response.data);
     } catch (error) {
       console.error('Error fetching comparison:', error);
@@ -41,10 +36,7 @@ const Comparison = () => {
 
   const handleRemove = async (productId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/comparison/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/comparison/${productId}`);
       fetchComparison();
       toast.success('Product removed from comparison');
     } catch (error) {
@@ -63,10 +55,7 @@ const Comparison = () => {
 
   const handleClearAll = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/comparison`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete('/comparison');
       fetchComparison();
       toast.success('Comparison cleared');
     } catch (error) {

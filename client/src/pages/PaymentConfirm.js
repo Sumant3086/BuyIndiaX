@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import api from '../utils/api';
 import { FaCheckCircle, FaShippingFast, FaBox } from 'react-icons/fa';
 import { fadeInUp } from '../theme/animations';
 import './PaymentConfirm.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const PaymentConfirm = () => {
   const { orderId } = useParams();
@@ -16,10 +14,7 @@ const PaymentConfirm = () => {
 
   const fetchOrder = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/orders/${orderId}`);
       setOrder(response.data);
     } catch (error) {
       console.error('Error fetching order:', error);

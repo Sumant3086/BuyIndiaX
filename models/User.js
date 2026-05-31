@@ -21,8 +21,21 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'admin', 'manager', 'inventory_staff', 'sales_staff', 'support_staff'],
     default: 'user'
+  },
+  permissions: [{
+    type: String,
+    enum: [
+      'view_products', 'manage_products', 'view_orders', 'manage_orders',
+      'view_inventory', 'manage_inventory', 'view_analytics', 'manage_users',
+      'manage_coupons', 'view_customers', 'manage_customers', 'process_refunds'
+    ]
+  }],
+  department: {
+    type: String,
+    enum: ['sales', 'inventory', 'customer_service', 'management', 'admin'],
+    default: 'sales'
   },
   address: {
     street: String,
@@ -118,9 +131,15 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Performance indexes
+userSchema.index({ email: 1 }); // already unique, but explicit for explain plans
+userSchema.index({ role: 1 }); // for admin queries
+userSchema.index({ membershipTier: 1 });
+userSchema.index({ createdAt: -1 });
+
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 12); // cost 12 in production
   next();
 });
 

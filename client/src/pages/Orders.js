@@ -1,220 +1,209 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import api from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import SEOMeta from '../components/SEOMeta';
+import { OrderCardSkeleton } from '../components/LoadingSkeleton';
 import OrderTimeline from '../components/OrderTimeline';
-import { fadeInUp, staggerContainer, staggerItem } from '../theme/animations';
 import './Orders.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const fmt = (v) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+
+const fmtDate = (d) =>
+  new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const STATUS_COLORS = {
+  Pending: 'warning', Processing: 'info', Shipped: 'primary',
+  Delivered: 'success', Cancelled: 'danger', Refunded: 'secondary'
+};
 
 const Orders = () => {
+  useDocumentTitle('My Orders');
+  const { user } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userStats, setUserStats] = useState(null);
+  const [error, setError] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
-    fetchOrders();
-    fetchUserStats();
+    api.get('/orders')
+      .then(res => {
+        // API returns { orders, total } or just an array (backward compat)
+        const data = Array.isArray(res.data) ? res.data : (res.data.orders || []);
+        setOrders(data);
+      })
+      .catch(() => setError('Failed to load orders. Please try again.'))
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchOrders = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/orders`);
-      setOrders(response.data);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filtered = useMemo(() => {
+    if (!filterStatus) return orders;
+    return orders.filter(o => o.status === filterStatus);
+  }, [orders, filterStatus]);
 
-  const fetchUserStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUserStats(response.data.user);
-    } catch (error) {
-      console.error('Error fetching user stats:', error);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      Pending: 'warning',
-      Processing: 'info',
-      Shipped: 'primary',
-      Delivered: 'success',
-      Cancelled: 'danger'
-    };
-    return colors[status] || 'secondary';
-  };
+  const stats = useMemo(() => ({
+    total: orders.length,
+    totalSpent: orders.filter(o => o.isPaid).reduce((s, o) => s + o.totalAmount, 0),
+    delivered: orders.filter(o => o.status === 'Delivered').length,
+    active: orders.filter(o => ['Pending', 'Processing', 'Shipped'].includes(o.status)).length
+  }), [orders]);
 
   if (loading) {
-    return <div className="loading">Loading orders...</div>;
-  }
-
-  if (orders.length === 0) {
     return (
-      <div className="empty-orders">
+      <div className="orders-page">
         <div className="container">
-          <div className="empty-content">
-            <span className="empty-icon">📦</span>
-            <h2>No orders yet</h2>
-            <p>Start shopping to see your orders here!</p>
-            <a href="/products" className="btn btn-primary">Browse Products</a>
+          <h1 className="page-title">My Orders</h1>
+          <div className="orders-list">
+            {Array.from({ length: 3 }).map((_, i) => <OrderCardSkeleton key={i} />)}
           </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="orders-page">
-      <div className="container">
-        <motion.h1 
-          className="page-title"
-          variants={fadeInUp}
-          initial="hidden"
-          animate="visible"
-        >
-          My Orders 📦
-        </motion.h1>
+  if (error) {
+    return (
+      <div className="orders-page">
+        <div className="container">
+          <div className="orders-error">
+            <p>{error}</p>
+            <button className="btn btn-primary" onClick={() => window.location.reload()}>Retry</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-        {userStats && (
-          <motion.div 
-            className="loyalty-card"
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-          >
-            <div className="loyalty-info">
-              <div className="loyalty-item">
-                <span className="loyalty-icon">⭐</span>
-                <div>
-                  <p className="loyalty-label">Loyalty Points</p>
-                  <p className="loyalty-value">{userStats.loyaltyPoints || 0}</p>
-                </div>
-              </div>
-              <div className="loyalty-item">
-                <span className="loyalty-icon">👑</span>
-                <div>
-                  <p className="loyalty-label">Membership Tier</p>
-                  <p className="loyalty-value">{userStats.membershipTier || 'Bronze'}</p>
-                </div>
-              </div>
-              <div className="loyalty-item">
-                <span className="loyalty-icon">💰</span>
-                <div>
-                  <p className="loyalty-label">Total Spent</p>
-                  <p className="loyalty-value">₹{(userStats.totalSpent || 0).toLocaleString()}</p>
-                </div>
-              </div>
+  if (orders.length === 0) {
+    return (
+      <>
+        <SEOMeta title="My Orders" />
+        <div className="orders-page">
+          <div className="container">
+            <div className="empty-orders">
+              <span className="empty-icon" aria-hidden="true">📦</span>
+              <h2>No orders yet</h2>
+              <p>Your orders will appear here once you start shopping.</p>
+              <Link to="/products" className="btn btn-primary">Browse Products</Link>
             </div>
-            <p className="loyalty-note">💡 Earn 1 point for every ₹100 spent!</p>
-          </motion.div>
-        )}
+          </div>
+        </div>
+      </>
+    );
+  }
 
-        <motion.div 
-          className="orders-list"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {orders.map((order) => (
-            <motion.div 
-              key={order._id} 
-              className="order-card"
-              variants={staggerItem}
-              whileHover={{ y: -4 }}
-            >
-              <div className="order-header">
-                <div>
-                  <p className="order-id">Order #{order._id.slice(-8)}</p>
-                  <p className="order-date">
-                    {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                </div>
-                <span className={`badge badge-${getStatusColor(order.status)}`}>
-                  {order.status}
-                </span>
-              </div>
+  return (
+    <>
+      <SEOMeta title="My Orders" description="View and track all your BuyIndiaX orders." />
+      <div className="orders-page">
+        <div className="container">
+          <h1 className="page-title">My Orders</h1>
 
-              <div className="order-items">
-                {order.items.map((item, index) => (
-                  <div key={index} className="order-item">
-                    <div className="order-item-info">
-                      <p className="item-name">{item.name}</p>
-                      <p className="item-qty">Quantity: {item.quantity}</p>
-                    </div>
-                    <p className="item-price">₹{item.price.toLocaleString()}</p>
+          {/* Stats row */}
+          <div className="orders-stats">
+            <div className="stat"><strong>{stats.total}</strong><span>Total Orders</span></div>
+            <div className="stat"><strong>{stats.delivered}</strong><span>Delivered</span></div>
+            <div className="stat"><strong>{stats.active}</strong><span>In Progress</span></div>
+            <div className="stat"><strong>{fmt(stats.totalSpent)}</strong><span>Total Spent</span></div>
+          </div>
+
+          {/* Filter */}
+          <div className="orders-filter">
+            {['', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
+              <button
+                key={s || 'all'}
+                className={`filter-btn ${filterStatus === s ? 'active' : ''}`}
+                onClick={() => setFilterStatus(s)}
+              >
+                {s || 'All'}
+              </button>
+            ))}
+          </div>
+
+          {/* Orders list */}
+          <div className="orders-list">
+            {filtered.map(order => (
+              <article key={order._id} className="order-card">
+                <div className="order-header">
+                  <div className="order-meta">
+                    <span className="order-number">
+                      #{order.orderNumber || order._id.toString().slice(-8).toUpperCase()}
+                    </span>
+                    <time className="order-date" dateTime={order.createdAt}>
+                      {fmtDate(order.createdAt)}
+                    </time>
                   </div>
-                ))}
-              </div>
-
-              <div className="order-footer">
-                <div className="order-address">
-                  <p><strong>Shipping Address:</strong></p>
-                  <p>{order.shippingAddress.street}, {order.shippingAddress.city}</p>
-                  <p>{order.shippingAddress.state} - {order.shippingAddress.zipCode}</p>
+                  <span className={`order-status status-${STATUS_COLORS[order.status] || 'secondary'}`}>
+                    {order.status}
+                  </span>
                 </div>
-                <div className="order-total">
-                  <p className="total-label">Total Amount</p>
-                  <p className="total-amount">₹{order.totalAmount.toLocaleString()}</p>
-                  {order.isPaid && (
-                    <span className="paid-badge">✓ Paid</span>
+
+                <div className="order-items-preview">
+                  {order.items?.slice(0, 3).map((item, i) => (
+                    <div key={i} className="order-item-chip">
+                      {item.product?.image && (
+                        <img
+                          src={item.product.image}
+                          alt={item.name}
+                          loading="lazy"
+                          className="chip-image"
+                        />
+                      )}
+                      <span className="chip-name">{item.name}</span>
+                      <span className="chip-qty">×{item.quantity}</span>
+                    </div>
+                  ))}
+                  {order.items?.length > 3 && (
+                    <span className="more-items">+{order.items.length - 3} more</span>
                   )}
                 </div>
-              </div>
 
-              <motion.button
-                className="btn btn-primary track-btn"
-                onClick={() => setSelectedOrder(order)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Track Order 📍
-              </motion.button>
-            </motion.div>
-          ))}
-        </motion.div>
+                <div className="order-footer">
+                  <span className="order-total">{fmt(order.totalAmount)}</span>
+                  <div className="order-actions">
+                    {order.trackingNumber && (
+                      <span className="tracking-number" title={`Tracking: ${order.trackingNumber}`}>
+                        📦 {order.trackingNumber}
+                      </span>
+                    )}
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => setSelectedOrder(selectedOrder?._id === order._id ? null : order)}
+                      aria-expanded={selectedOrder?._id === order._id}
+                    >
+                      {selectedOrder?._id === order._id ? 'Close' : 'Details'}
+                    </button>
+                  </div>
+                </div>
 
-        {/* Order Timeline Modal */}
-        <AnimatePresence>
-          {selectedOrder && (
-            <motion.div
-              className="timeline-modal-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedOrder(null)}
-            >
-              <motion.div
-                className="timeline-modal"
-                initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 50 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button 
-                  className="modal-close"
-                  onClick={() => setSelectedOrder(null)}
-                >
-                  ✕
-                </button>
-                <OrderTimeline order={selectedOrder} />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {selectedOrder?._id === order._id && (
+                  <div className="order-detail-expanded">
+                    <OrderTimeline order={order} />
+                    <div className="order-items-full">
+                      {order.items?.map((item, i) => (
+                        <div key={i} className="order-item-row">
+                          <span className="item-name">{item.name}</span>
+                          <span className="item-qty">×{item.quantity}</span>
+                          <span className="item-price">{fmt(item.price * item.quantity)}</span>
+                        </div>
+                      ))}
+                      <div className="order-item-row order-item-total">
+                        <strong>Total</strong>
+                        <span />
+                        <strong>{fmt(order.totalAmount)}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -8,7 +8,7 @@ const userActivitySchema = new mongoose.Schema({
   },
   activityType: {
     type: String,
-    enum: ['view', 'search', 'add_to_cart', 'wishlist', 'purchase', 'review'],
+    enum: ['view', 'search', 'add_to_cart', 'wishlist', 'purchase', 'review', 'click', 'checkout_start', 'checkout_abandon'],
     required: true
   },
   product: {
@@ -22,7 +22,13 @@ const userActivitySchema = new mongoose.Schema({
   },
   sessionId: String,
   ipAddress: String,
-  userAgent: String
+  userAgent: String,
+  // CTR and Conversion Tracking
+  clickSource: String, // 'recommendation', 'search', 'category', 'home'
+  wasRecommendation: Boolean,
+  checkoutStep: Number, // 1: started, 2: shipping, 3: payment, 4: completed
+  cartValue: Number,
+  timeSpent: Number // seconds
 }, {
   timestamps: true
 });

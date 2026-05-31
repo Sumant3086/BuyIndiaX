@@ -18,11 +18,89 @@ const productSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Electronics', 'Clothing', 'Books', 'Home', 'Sports', 'Other']
+    enum: [
+      'Fresh Produce',
+      'Grocery', 
+      'Beverages',
+      'Health & Beauty',
+      'Non-Food Items'
+    ]
+  },
+  subcategory: {
+    type: String,
+    enum: [
+      // Fresh Produce
+      'Vegetables', 'Fruits', 'Meat', 'Halal Meat', 'Fish & Seafood', 'Dairy', 'Bakery',
+      // Grocery
+      'Staples', 'Pasta & Noodles', 'Canned Goods', 'Sauces & Condiments', 'Snacks', 'Baby Food',
+      // Beverages
+      'Soft Drinks', 'Juices & Water', 'Energy Drinks', 'Alcoholic Beverages', 'Tea & Coffee',
+      // Health & Beauty
+      'Skincare', 'Hair Care', 'Bath & Body', 'Oral Care', 'Fragrances', 'Cosmetics', 'Healthcare',
+      // Non-Food Items
+      'Cleaning Products', 'Kitchenware', 'Stationery', 'Electronics', 'Clothing & Textiles'
+    ]
   },
   brand: {
     type: String,
     default: 'Generic'
+  },
+  // Supermarket specific fields
+  unit: {
+    type: String,
+    enum: ['kg', 'g', 'l', 'ml', 'piece', 'pack', 'dozen', 'bundle'],
+    default: 'piece'
+  },
+  unitQuantity: {
+    type: Number,
+    default: 1
+  },
+  isPerishable: {
+    type: Boolean,
+    default: false
+  },
+  shelfLife: {
+    type: Number, // days
+    default: null
+  },
+  storageCondition: {
+    type: String,
+    enum: ['Ambient', 'Refrigerated', 'Frozen'],
+    default: 'Ambient'
+  },
+  isHalalCertified: {
+    type: Boolean,
+    default: false
+  },
+  isOrganic: {
+    type: Boolean,
+    default: false
+  },
+  countryOfOrigin: {
+    type: String,
+    default: 'India'
+  },
+  hsnCode: {
+    type: String,
+    trim: true
+  },
+  gstRate: {
+    cgst: { type: Number, default: 0 },
+    sgst: { type: Number, default: 0 },
+    igst: { type: Number, default: 0 }
+  },
+  trendingScore: {
+    type: Number,
+    default: 0
+  },
+  reservedStock: {
+    type: Number,
+    default: 0
+  },
+  barcode: {
+    type: String,
+    unique: true,
+    sparse: true
   },
   images: [{
     url: String,
@@ -41,6 +119,24 @@ const productSchema = new mongoose.Schema({
   lowStockThreshold: {
     type: Number,
     default: 10
+  },
+  // FIFO/FEFO Inventory Management
+  inventoryBatches: [{
+    batchNumber: String,
+    quantity: Number,
+    purchaseDate: Date,
+    expiryDate: Date,
+    costPrice: Number,
+    supplier: String,
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  inventoryMethod: {
+    type: String,
+    enum: ['FIFO', 'FEFO', 'LIFO'],
+    default: 'FIFO'
   },
   rating: {
     type: Number,
@@ -98,16 +194,46 @@ const productSchema = new mongoose.Schema({
   lastRestocked: {
     type: Date,
     default: Date.now
-  }
+  },
+  // Price history for price drop monitoring
+  priceHistory: [{
+    price: Number,
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  // Stock alert registrations
+  stockAlerts: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    registeredAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });
 
-// Index for search optimization
-productSchema.index({ name: 'text', description: 'text', tags: 'text' });
-productSchema.index({ category: 1, price: 1 });
-productSchema.index({ rating: -1 });
-productSchema.index({ views: -1 });
+// Text search index with field weights
+productSchema.index(
+  { name: 'text', description: 'text', tags: 'text', brand: 'text' },
+  { weights: { name: 10, tags: 5, brand: 3, description: 1 }, name: 'product_text_search' }
+);
+productSchema.index({ category: 1, subcategory: 1, price: 1 });
+productSchema.index({ category: 1, stock: 1 });
+productSchema.index({ rating: -1, numReviews: -1 });
+productSchema.index({ trendingScore: -1 });
 productSchema.index({ salesCount: -1 });
+productSchema.index({ stock: 1, lowStockThreshold: 1 });
+productSchema.index({ 'inventoryBatches.expiryDate': 1 });
+productSchema.index({ createdAt: -1 });
+productSchema.index({ discount: -1, stock: 1 });
+productSchema.index({ isFlashSale: 1, flashSaleEndTime: 1 });
+productSchema.index({ isFeatured: 1, stock: 1 });
+productSchema.index({ brand: 1, category: 1 });
 
 module.exports = mongoose.model('Product', productSchema);

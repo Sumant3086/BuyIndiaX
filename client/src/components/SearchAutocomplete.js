@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaClock, FaTimes } from 'react-icons/fa';
-import axios from 'axios';
+import api from '../utils/api';
 import { fadeInDown, staggerContainer, staggerItem } from '../theme/animations';
 import './SearchAutocomplete.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const SearchAutocomplete = () => {
   const [query, setQuery] = useState('');
@@ -50,9 +48,7 @@ const SearchAutocomplete = () => {
   const fetchSuggestions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/products/search`, {
-        params: { q: query, limit: 10 }
-      });
+      const response = await api.get('/products/search', { params: { q: query, limit: 10 } });
       setSuggestions(response.data);
       
       // Group suggestions by category

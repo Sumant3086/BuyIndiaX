@@ -3,11 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaBell, FaTimes, FaCheck, FaShoppingCart, FaGift, FaExclamation } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
 import socket from '../utils/socket';
-import axios from 'axios';
+import api from '../utils/api';
 import { notificationVariants } from '../theme/animations';
 import './NotificationCenter.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
@@ -40,10 +38,7 @@ const NotificationCenter = () => {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/notifications');
       
       // Ensure response.data is an array
       const notificationsData = Array.isArray(response.data) ? response.data : [];
@@ -59,12 +54,7 @@ const NotificationCenter = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API_URL}/notifications/${notificationId}/read`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put(`/notifications/${notificationId}/read`, {});
       
       setNotifications(prev =>
         prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
@@ -77,12 +67,7 @@ const NotificationCenter = () => {
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API_URL}/notifications/mark-all-read`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put('/notifications/mark-all-read', {});
       
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
@@ -93,10 +78,7 @@ const NotificationCenter = () => {
 
   const deleteNotification = async (notificationId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/notifications/${notificationId}`);
       
       setNotifications(prev => prev.filter(n => n._id !== notificationId));
     } catch (error) {

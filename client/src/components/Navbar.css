@@ -21,12 +21,10 @@
   }
 }
 
-/* Colorful navbar for light mode */
+/* Static navbar for light mode — no continuous animation (saves CPU) */
 [data-theme="light"] .navbar-alt {
-  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
-  background-size: 200% 200%;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
-  animation: slideDown 0.5s ease-out, gradientShift 8s ease infinite;
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
 }
 
 @keyframes gradientShift {

@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { FaRobot, FaTimes, FaPaperPlane, FaSpinner } from 'react-icons/fa';
 import './AIChatbot.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,22 +51,12 @@ const AIChatbot = () => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       const conversationHistory = messages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content
       }));
 
-      const response = await axios.post(
-        `${API_URL}/ai/chat`,
-        {
-          message: input,
-          conversationHistory
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await api.post('/ai/chat', { message: input, conversationHistory });
 
       const aiMessage = {
         role: 'assistant',

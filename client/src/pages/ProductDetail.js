@@ -1,81 +1,73 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
+import api from '../utils/api';
 import { showToast } from '../utils/toast';
+import { getFallbackImage, handleImageError } from '../utils/imageHelper';
 import RecentlyViewed, { addToRecentlyViewed } from '../components/RecentlyViewed';
+import UrgencyBadge from '../components/UrgencyBadge';
+import SEOMeta from '../components/SEOMeta';
+import { ProductDetailSkeleton } from '../components/LoadingSkeleton';
 import './ProductDetail.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [inWishlist, setInWishlist] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const { addToCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProduct();
-    fetchReviews();
-    fetchRecommendations();
-    checkWishlist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setNotFound(false);
 
-  const fetchProduct = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/products/${id}`);
-      setProduct(response.data);
-      
-      // Add to recently viewed
-      addToRecentlyViewed(response.data);
-    } catch (error) {
-      console.error('Error fetching product:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Fire all requests in parallel — don't wait sequentially
+    const [productRes, reviewsRes, recsRes, wishlistRes] = await Promise.allSettled([
+      api.get(`/products/${id}`),
+      api.get(`/reviews/product/${id}`),
+      api.get(`/products/recommendations/${id}`),
+      user ? api.get('/wishlist') : Promise.resolve(null)
+    ]);
 
-  const fetchReviews = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/reviews/product/${id}`);
-      setReviews(response.data);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
+    if (productRes.status === 'fulfilled') {
+      const p = productRes.value.data;
+      setProduct(p);
+      addToRecentlyViewed(p);
+    } else {
+      setNotFound(true);
     }
-  };
 
-  const fetchRecommendations = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/products/recommendations/${id}`);
-      setRecommendations(response.data);
-    } catch (error) {
-      console.error('Error fetching recommendations:', error);
+    if (reviewsRes.status === 'fulfilled') {
+      setReviews(reviewsRes.value.data || []);
     }
-  };
 
-  const checkWishlist = async () => {
-    if (!user) return;
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/wishlist`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const exists = response.data.products.some(item => item.product._id === id);
-      setInWishlist(exists);
-    } catch (error) {
-      console.error('Error checking wishlist:', error);
+    if (recsRes.status === 'fulfilled') {
+      setRecommendations((recsRes.value.data || []).map(r => ({
+        ...r, image: r.image || getFallbackImage(r.category)
+      })));
     }
-  };
+
+    if (wishlistRes?.status === 'fulfilled' && wishlistRes.value) {
+      const exists = wishlistRes.value.data.products?.some(
+        item => (item.product?._id || item.product) === id
+      );
+      setInWishlist(!!exists);
+    }
+
+    setLoading(false);
+  }, [id, user]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -93,75 +85,85 @@ const ProductDetail = () => {
   };
 
   const toggleWishlist = async () => {
-    if (!user) {
-      showToast('Please login to add to wishlist', 'warning');
-      navigate('/login');
-      return;
-    }
-
+    if (!user) { showToast('Please login to save items', 'warning'); navigate('/login'); return; }
     try {
-      const token = localStorage.getItem('token');
       if (inWishlist) {
-        await axios.delete(`${API_URL}/wishlist/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/wishlist/${id}`);
         setInWishlist(false);
         showToast('Removed from wishlist', 'info');
       } else {
-        await axios.post(`${API_URL}/wishlist/add`, 
-          { productId: id },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.post('/wishlist/add', { productId: id });
         setInWishlist(true);
-        showToast('Added to wishlist! ❤️', 'success');
+        showToast('Saved to wishlist', 'success');
       }
-    } catch (error) {
-      showToast(error.response?.data?.message || 'Failed to update wishlist', 'error');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not update wishlist', 'error');
     }
   };
 
   const submitReview = async (e) => {
     e.preventDefault();
-    if (!user) {
-      showToast('Please login to submit a review', 'warning');
-      navigate('/login');
-      return;
-    }
+    if (!comment.trim()) { showToast('Please write a comment', 'warning'); return; }
+    if (!user) { showToast('Please login to review', 'warning'); navigate('/login'); return; }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/reviews`, 
-        { productId: id, rating, comment },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      showToast('Review submitted! ⭐', 'success');
+      await api.post('/reviews', { productId: id, rating, comment });
+      showToast('Review submitted!', 'success');
       setComment('');
       setRating(5);
-      fetchReviews();
-      fetchProduct();
+      api.get(`/reviews/product/${id}`).then(r => setReviews(r.data || []));
     } catch (error) {
-      showToast(error.response?.data?.message || 'Failed to submit review', 'error');
+      const errorMessage = error.response?.data?.message || 'Failed to submit review';
+      if (errorMessage.includes('already reviewed')) {
+        showToast('You have already reviewed this product', 'info');
+      } else {
+        showToast(errorMessage, 'error');
+      }
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading product...</div>;
+    return (
+      <div className="product-detail-page">
+        <div className="container"><ProductDetailSkeleton /></div>
+      </div>
+    );
   }
 
-  if (!product) {
-    return <div className="loading">Product not found</div>;
+  if (notFound || !product) {
+    return (
+      <div className="product-detail-page">
+        <div className="container" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <h2>Product not found</h2>
+          <p style={{ color: '#64748b', margin: '0.5rem 0 1.5rem' }}>
+            This product may have been removed or is no longer available.
+          </p>
+          <a href="/products" className="btn btn-primary">Browse Products</a>
+        </div>
+      </div>
+    );
   }
 
   return (
+    <>
+      <SEOMeta
+        title={product.name}
+        description={product.description?.slice(0, 155) || `Buy ${product.name} on BuyIndiaX`}
+        image={product.image}
+        type="product"
+        price={product.price}
+        availability={product.stock > 0 ? 'in_stock' : 'out_of_stock'}
+      />
     <div className="product-detail-page">
       <div className="container">
         <div className="product-detail-layout">
           <div className="product-image-section">
-            <img 
-              src={product.image || 'https://via.placeholder.com/600x600?text=No+Image'} 
-              alt={product.name || 'Product'} 
+            <img
+              src={imgError ? getFallbackImage(product.category) : (product.image || getFallbackImage(product.category))}
+              alt={product.name || 'Product'}
               className="product-detail-image"
-              onError={(e) => { e.target.src = 'https://via.placeholder.com/600x600?text=No+Image'; }}
+              loading="eager"
+              onError={() => setImgError(true)}
             />
           </div>
 
@@ -173,6 +175,16 @@ const ProductDetail = () => {
               <span className="rating-stars">{'⭐'.repeat(Math.round(product.rating))}</span>
               <span className="rating-text">({product.numReviews} reviews)</span>
             </div>
+
+            {/* Urgency Messages */}
+            {product.urgencyMessages && product.urgencyMessages.length > 0 && (
+              <UrgencyBadge messages={product.urgencyMessages} />
+            )}
+
+            {/* Social Proof */}
+            {product.socialProof && product.socialProof.length > 0 && (
+              <UrgencyBadge messages={product.socialProof} />
+            )}
 
             <div className="product-price-section">
               <span className="product-price">₹{product.price.toLocaleString()}</span>
@@ -294,11 +306,25 @@ const ProductDetail = () => {
             <h2>You May Also Like</h2>
             <div className="recommendations-grid">
               {recommendations.map(rec => (
-                <div key={rec._id} className="recommendation-card" onClick={() => navigate(`/products/${rec._id}`)}>
-                  <img src={rec.image} alt={rec.name} />
+                <div
+                  key={rec._id}
+                  className="recommendation-card"
+                  onClick={() => {
+                    navigate(`/products/${rec._id}`);
+                    window.scrollTo(0, 0);
+                  }}
+                >
+                  <img
+                    src={rec.image || getFallbackImage(rec.category)}
+                    alt={rec.name}
+                    onError={(e) => handleImageError(e, rec.category)}
+                  />
                   <h4>{rec.name}</h4>
-                  <p className="price">₹{rec.price.toLocaleString()}</p>
-                  <span className="rating">{'⭐'.repeat(Math.round(rec.rating))}</span>
+                  <p className="price">₹{rec.price?.toLocaleString() || '0'}</p>
+                  <span className="rating">
+                    {'⭐'.repeat(Math.round(rec.rating || 0))}
+                    {rec.rating ? ` ${rec.rating.toFixed(1)}` : ''}
+                  </span>
                 </div>
               ))}
             </div>
@@ -309,6 +335,7 @@ const ProductDetail = () => {
       {/* Recently Viewed Sidebar */}
       <RecentlyViewed />
     </div>
+    </>
   );
 };
 

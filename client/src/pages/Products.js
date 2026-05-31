@@ -7,8 +7,10 @@ import { useProducts, usePrefetchProduct } from '../hooks/useProducts';
 import { useAddToCart } from '../hooks/useCart';
 import { useStore } from '../store/useStore';
 import { showToast } from '../utils/toast';
+import { handleImageError, getFallbackImage } from '../utils/imageHelper';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import AnimatedSection from '../components/AnimatedSection';
+import UrgencyBadge from '../components/UrgencyBadge';
 import { cardVariants, staggerContainer } from '../theme/animations';
 import './Products.css';
 
@@ -18,10 +20,10 @@ const Products = () => {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const { user } = useContext(AuthContext);
   
-  const categories = ['All', 'Electronics', 'Clothing', 'Books', 'Home', 'Sports', 'Other'];
+  const categories = ['All', 'Fresh Produce', 'Grocery', 'Beverages', 'Health & Beauty', 'Non-Food Items'];
   
   // Use TanStack Query for data fetching
-  const filters = {};
+  const filters = { limit: 20, page: 1 };
   if (category !== 'All') filters.category = category;
   if (search) filters.search = search;
   
@@ -54,6 +56,7 @@ const Products = () => {
 
   const handleCategoryChange = (cat) => {
     setCategory(cat);
+    setSearch(''); // Clear search when changing category
     if (cat !== 'All') {
       setSearchParams({ category: cat });
     } else {
@@ -102,16 +105,58 @@ const Products = () => {
 
         <AnimatedSection animation="fadeInUp" delay={0.2}>
           <div className="products-filters">
-            <div className="search-box">
-              <FaSearch className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="search-input"
-              />
-            </div>
+            <motion.div 
+              className="search-box"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="search-wrapper">
+                <motion.div 
+                  className="search-icon-wrapper"
+                  animate={{ 
+                    rotate: search ? [0, 360] : 0,
+                  }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <FaSearch className="search-icon" />
+                </motion.div>
+                
+                <input
+                  type="text"
+                  placeholder="Search for products, brands, categories..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="search-input"
+                />
+                
+                {search && (
+                  <motion.button
+                    className="search-clear"
+                    onClick={() => setSearch('')}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    ×
+                  </motion.button>
+                )}
+                
+                <div className="search-glow"></div>
+              </div>
+              
+              {search && (
+                <motion.div 
+                  className="search-results-count"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  {products.length} {products.length === 1 ? 'result' : 'results'} found
+                </motion.div>
+              )}
+            </motion.div>
 
             <div className="category-filters">
               <FaFilter className="filter-icon" />
@@ -188,9 +233,9 @@ const Products = () => {
                 >
                   <Link to={`/products/${product._id}`} className="product-image">
                     <motion.img 
-                      src={product.image || 'https://via.placeholder.com/300x300?text=No+Image'} 
+                      src={product.image || getFallbackImage(product.category)} 
                       alt={product.name || 'Product'}
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/300x300?text=No+Image'; }}
+                      onError={(e) => handleImageError(e, product.category)}
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.4 }}
                     />
@@ -227,6 +272,13 @@ const Products = () => {
                   </Link>
                   
                   <div className="product-info">
+                    {/* Urgency Messages */}
+                    {product.urgencyMessages && product.urgencyMessages.length > 0 && (
+                      <div style={{ marginBottom: '8px' }}>
+                        <UrgencyBadge messages={product.urgencyMessages.slice(0, 1)} />
+                      </div>
+                    )}
+                    
                     <Link to={`/products/${product._id}`} className="product-name">
                       {product.name || 'Unnamed Product'}
                     </Link>

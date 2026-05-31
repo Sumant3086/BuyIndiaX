@@ -1,0 +1,8 @@
+# Namespace for BuyIndiaX application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: buyindiax
+  labels:
+    name: buyindiax
+    project: ecommerce

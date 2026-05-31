@@ -23,7 +23,7 @@ const AdvancedFilters = ({ onFilterChange, products = [] }) => {
 
   // Extract unique brands from products
   const uniqueBrands = [...new Set(products.map(p => p.brand).filter(Boolean))];
-  const categories = ['Electronics', 'Clothing', 'Books', 'Home', 'Sports', 'Other'];
+  const categories = ['Fresh Produce', 'Grocery', 'Beverages', 'Health & Beauty', 'Non-Food Items'];
   const ratings = [5, 4, 3, 2, 1];
 
   useEffect(() => {

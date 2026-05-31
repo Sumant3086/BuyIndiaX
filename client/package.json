@@ -1,12 +1,9 @@
 {
-  "name": "client",
+  "name": "buyindiax-client",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.5.0",
     "@tanstack/react-query": "^5.96.2",
-    "@tanstack/react-query-devtools": "^5.96.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -22,9 +19,11 @@
     "react-slick": "^0.30.2",
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.6.1",
-    "three": "^0.183.2",
     "web-vitals": "^2.1.4",
     "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.96.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -33,21 +32,10 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "extends": ["react-app", "react-app/jest"]
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
   }
 }

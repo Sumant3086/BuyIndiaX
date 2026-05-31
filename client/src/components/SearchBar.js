@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import './SearchBar.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const SearchBar = () => {
   const [query, setQuery] = useState('');
@@ -37,7 +35,7 @@ const SearchBar = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products?search=${query}&limit=5`);
+      const response = await api.get('/products', { params: { search: query, limit: 5 } });
       setSuggestions(response.data.products);
       setShowSuggestions(true);
     } catch (error) {

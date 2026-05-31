@@ -7,19 +7,24 @@ const helmet = require('helmet');
 const compression = require('compression');
 const http = require('http');
 const socketIo = require('socket.io');
+const { initRedis } = require('./utils/redisClient');
 
 dotenv.config();
+
+const isDev = process.env.NODE_ENV !== 'production';
+const log = isDev ? console.log.bind(console) : () => {};
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-    credentials: true
-  }
+  cors: { origin: process.env.CORS_ORIGIN || 'http://localhost:3000', credentials: true },
+  // Limit per-socket memory: disable unused transports
+  transports: ['websocket', 'polling'],
+  pingTimeout: 30000,
+  pingInterval: 25000
 });
 
-// Security middleware
+// ── Security ──────────────────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -33,155 +38,213 @@ app.use(helmet({
     }
   },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
-app.use(compression());
 
-// CORS configuration with multiple origins
+app.use(compression({ level: 6, threshold: 1024 }));
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://localhost:5000',
   process.env.CORS_ORIGIN,
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ── Raw body for Razorpay webhook (must come BEFORE express.json) ─────────────
+// express.json() consumes the stream; the webhook needs the raw Buffer for HMAC
+app.use('/api/payment/webhook', express.raw({ type: 'application/json', limit: '1mb' }));
 
-// Sanitization middleware
-const { mongoSanitize, xss, sanitizeInput, preventSQLInjection, xssProtection } = require('./middleware/sanitize');
-app.use(mongoSanitize);
-app.use(xss);
-app.use(sanitizeInput);
-app.use(preventSQLInjection);
-app.use(xssProtection);
+// ── Body parsing (2mb max — adequate for retail APIs) ─────────────────────────
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
-// Rate limiting
+// ── Sanitization (single pass) ────────────────────────────────────────────────
+const { sanitize } = require('./middleware/sanitize');
+app.use(sanitize);
+
+// ── Rate limiting ──────────────────────────────────────────────────────────────
 const { apiLimiter } = require('./middleware/rateLimiter');
 app.use('/api/', apiLimiter);
 
-// Serve static files from React build
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'client/build')));
+// ── Static files ───────────────────────────────────────────────────────────────
+if (!isDev) {
+  app.use(express.static(path.join(__dirname, 'client/build'), {
+    maxAge: '7d',
+    etag: true,
+    lastModified: true
+  }));
 }
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  maxPoolSize: 10,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-})
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
+// ── MongoDB ────────────────────────────────────────────────────────────────────
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      maxPoolSize: isDev ? 5 : 10,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000
+    });
+    log('✓ MongoDB connected:', mongoose.connection.name);
+    initRedis().catch(() => log('Redis optional — running without cache persistence'));
+    const GSTCalculator = require('./utils/gstCalculator');
+    GSTCalculator.seedDefaultRates().catch(() => {});
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    setTimeout(connectDB, 10000);
+  }
+};
 
-// Socket.IO connection handling
+connectDB();
+
+mongoose.connection.on('disconnected', () => log('MongoDB disconnected — reconnecting'));
+mongoose.connection.on('error', (err) => console.error('MongoDB error:', err.message));
+
+// ── Socket.IO (with memory leak fixes) ────────────────────────────────────────
 const NotificationService = require('./utils/notificationService');
+const StockAlertSystem = require('./utils/stockAlertSystem');
+const RealTimeUpdates = require('./utils/realTimeUpdates');
+const ScheduledJobs = require('./utils/scheduledJobs');
+
 const notificationService = new NotificationService(io);
+const stockAlertSystem = new StockAlertSystem(notificationService);
+const realTimeUpdates = new RealTimeUpdates(io);
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-
   socket.on('join-room', (userId) => {
+    if (!userId || typeof userId !== 'string') return;
     socket.join(`user-${userId}`);
-    console.log(`User ${userId} joined their room`);
+    realTimeUpdates.joinUserRoom(socket, userId);
   });
 
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+  socket.on('view-product', (productId) => {
+    if (!productId || typeof productId !== 'string') return;
+    realTimeUpdates.trackProductPageView(socket, productId);
   });
+
+  socket.on('leave-product', (productId) => {
+    if (productId) realTimeUpdates.leaveProductRoom(socket, productId);
+  });
+
+  // Clean up all rooms on disconnect (handled in RealTimeUpdates)
+  socket.on('disconnect', () => {});
 });
 
-// Make io and notificationService accessible to routes
 app.set('io', io);
 app.set('notificationService', notificationService);
+app.set('stockAlertSystem', stockAlertSystem);
+app.set('realTimeUpdates', realTimeUpdates);
 
-// Routes
+ScheduledJobs.init(notificationService);
+
+// ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/order-management', require('./routes/orderManagement'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/delivery', require('./routes/delivery'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/wishlist', require('./routes/wishlist'));
 app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/finance', require('./routes/financialAnalytics'));
 app.use('/api/comparison', require('./routes/comparison'));
 app.use('/api/saved-searches', require('./routes/savedSearches'));
 app.use('/api/ai', require('./routes/ai-chat'));
+app.use('/api/inventory', require('./routes/inventory'));
+app.use('/api/warehouse', require('./routes/warehouse'));
+app.use('/api/pos', require('./routes/pos'));
+app.use('/api/suppliers', require('./routes/suppliers'));
+app.use('/api/purchase-orders', require('./routes/purchaseOrders'));
+app.use('/api/returns', require('./routes/returns'));
+app.use('/api/store', require('./routes/storeManagement'));
+app.use('/api/webhooks', require('./routes/webhooks'));
 
-// Health check
-app.get('/api/health', async (req, res) => {
-  try {
-    // Check database connection
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ status: 'Database disconnected' });
-    }
-    res.json({ 
-      status: 'Server is running',
-      timestamp: new Date(),
-      environment: process.env.NODE_ENV
-    });
-  } catch (error) {
-    res.status(503).json({ status: 'Service unavailable' });
-  }
+// ── Health check ───────────────────────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  if (dbState !== 1) return res.status(503).json({ status: 'degraded', db: 'disconnected' });
+  const { isRedisAvailable } = require('./utils/redisClient');
+  const { getCacheStats } = require('./middleware/cache');
+  res.json({
+    status: 'ok',
+    environment: process.env.NODE_ENV,
+    db: 'connected',
+    redis: isRedisAvailable() ? 'connected' : 'unavailable',
+    cache: getCacheStats(),
+    uptime: Math.round(process.uptime()) + 's',
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB'
+  });
 });
 
-// Serve React app for all other routes (must be after API routes)
-if (process.env.NODE_ENV === 'production') {
+// ── SPA fallback ───────────────────────────────────────────────────────────────
+if (!isDev) {
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/build/index.html'));
   });
 }
 
-// Global error handler
+// ── Global error handler (non-blocking audit log) ──────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message
+  const statusCode = err.status || err.statusCode || 500;
+  const message = isDev ? err.message : (statusCode < 500 ? err.message : 'Something went wrong');
+
+  // Non-blocking audit log — never delays the error response
+  if (statusCode === 500) {
+    setImmediate(() => {
+      const AuditLog = require('./models/AuditLog');
+      AuditLog.create({
+        user: req.user?._id,
+        action: 'error',
+        entity: 'system',
+        changes: { error: err.message },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent')
+      }).catch(() => {});
+    });
+  }
+
+  res.status(statusCode).json({
+    success: false,
+    message,
+    ...(isDev && { stack: err.stack })
   });
 });
 
+// ── Start server ───────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Socket.IO server ready`);
+  log(`✓ Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
 }).on('error', (err) => {
-  console.error('Server error:', err);
+  console.error('Server start error:', err);
   process.exit(1);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-    mongoose.connection.close();
+// ── Graceful shutdown ──────────────────────────────────────────────────────────
+const shutdown = async () => {
+  log('Shutting down gracefully...');
+  server.close(async () => {
+    const { gracefulDrainAll } = require('./utils/jobQueue');
+    await gracefulDrainAll().catch(() => {});
+    await mongoose.connection.close();
     process.exit(0);
   });
-});
+  setTimeout(() => process.exit(1), 15000);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 module.exports = { io };

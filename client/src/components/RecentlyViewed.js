@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaEye } from 'react-icons/fa';
 import { fadeInRight, staggerContainer, staggerItem } from '../theme/animations';
 import './RecentlyViewed.css';
@@ -8,6 +8,7 @@ import './RecentlyViewed.css';
 const RecentlyViewed = () => {
   const [recentProducts, setRecentProducts] = useState([]);
   const [isVisible, setIsVisible] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Load recently viewed products from localStorage
@@ -38,6 +39,11 @@ const RecentlyViewed = () => {
       window.removeEventListener('recentlyViewedUpdate', handleStorageChange);
     };
   }, []);
+
+  const handleProductClick = (productId) => {
+    navigate(`/products/${productId}`);
+    window.scrollTo(0, 0);
+  };
 
   if (recentProducts.length === 0 || !isVisible) {
     return null;
@@ -78,8 +84,10 @@ const RecentlyViewed = () => {
               variants={staggerItem}
               layout
               exit={{ opacity: 0, x: 100 }}
+              onClick={() => handleProductClick(product._id)}
+              style={{ cursor: 'pointer' }}
             >
-              <Link to={`/products/${product._id}`} className="recent-product-card">
+              <div className="recent-product-card">
                 <motion.div
                   className="product-image-wrapper"
                   whileHover={{ scale: 1.05 }}
@@ -103,7 +111,7 @@ const RecentlyViewed = () => {
                     </div>
                   )}
                 </div>
-              </Link>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>

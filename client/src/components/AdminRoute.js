@@ -5,23 +5,22 @@ import { AuthContext } from '../context/AuthContext';
 const AdminRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
 
-  console.log('AdminRoute - Loading:', loading, 'User:', user); // Debug log
-
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <div style={{
+          width: 32, height: 32,
+          border: '3px solid #e2e8f0', borderTopColor: '#2563eb',
+          borderRadius: '50%', animation: 'spin 0.7s linear infinite'
+        }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
   }
 
-  if (!user) {
-    console.log('AdminRoute - No user, redirecting to login'); // Debug log
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') return <Navigate to="/" replace />;
 
-  if (user.role !== 'admin') {
-    console.log('AdminRoute - User is not admin, role:', user.role); // Debug log
-    return <Navigate to="/" replace />;
-  }
-
-  console.log('AdminRoute - Access granted for admin'); // Debug log
   return children;
 };
 

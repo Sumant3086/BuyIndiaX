@@ -4,48 +4,58 @@ const UserActivity = require('../models/UserActivity');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { auth } = require('../middleware/auth');
+const { getCollaborativeRecommendations, storeUserInteraction, isRedisAvailable } = require('../utils/redisClient');
 
-// Track user activity
-router.post('/track', auth, async (req, res) => {
-  try {
-    const { activityType, product, searchQuery, metadata } = req.body;
+// Track user activity — respond immediately, persist in background
+router.post('/track', auth, (req, res) => {
+  // Respond immediately — client doesn't need to wait for DB writes
+  res.json({ ok: true });
 
-    const activity = new UserActivity({
-      user: req.user._id,
-      activityType,
-      product,
-      searchQuery,
-      metadata,
-      sessionId: req.sessionID,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent')
-    });
+  // All tracking is fire-and-forget
+  setImmediate(async () => {
+    try {
+      const { activityType, product, searchQuery, metadata, clickSource, wasRecommendation, checkoutStep, cartValue, timeSpent } = req.body;
+      if (!activityType) return;
 
-    await activity.save();
+      await UserActivity.create({
+        user: req.user._id,
+        activityType,
+        product: product || undefined,
+        searchQuery: searchQuery || undefined,
+        metadata,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        clickSource,
+        wasRecommendation,
+        checkoutStep,
+        cartValue,
+        timeSpent
+      });
 
-    // Update user's recently viewed if it's a view activity
-    if (activityType === 'view' && product) {
-      const User = require('../models/User');
-      const user = await User.findById(req.user._id);
-      
-      // Remove if already exists
-      user.recentlyViewed = user.recentlyViewed.filter(
-        item => item.product.toString() !== product
-      );
-      
-      // Add to beginning
-      user.recentlyViewed.unshift({ product, viewedAt: new Date() });
-      
-      // Keep only last 20
-      user.recentlyViewed = user.recentlyViewed.slice(0, 20);
-      
-      await user.save();
-    }
+      // Redis collaborative filtering
+      if (isRedisAvailable() && product && ['view', 'add_to_cart', 'purchase'].includes(activityType)) {
+        const score = activityType === 'purchase' ? 5 : activityType === 'add_to_cart' ? 2 : 1;
+        storeUserInteraction(req.user._id.toString(), product, score).catch(() => {});
+      }
 
-    res.json({ message: 'Activity tracked' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
+      // Update recently viewed using atomic $push + $slice (single DB call, no read)
+      if (activityType === 'view' && product) {
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(req.user._id, {
+          $pull: { recentlyViewed: { product } }
+        });
+        await User.findByIdAndUpdate(req.user._id, {
+          $push: {
+            recentlyViewed: {
+              $each: [{ product, viewedAt: new Date() }],
+              $position: 0,
+              $slice: 20
+            }
+          }
+        });
+      }
+    } catch { /* tracking failures are non-fatal */ }
+  });
 });
 
 // Get user's recently viewed products
@@ -69,6 +79,25 @@ router.get('/recently-viewed', auth, async (req, res) => {
 // Get personalized recommendations
 router.get('/recommendations', auth, async (req, res) => {
   try {
+    let recommendations = [];
+
+    // Try Redis collaborative filtering first
+    if (isRedisAvailable()) {
+      const redisRecommendations = await getCollaborativeRecommendations(req.user._id.toString(), 12);
+      
+      if (redisRecommendations.length > 0) {
+        recommendations = await Product.find({
+          _id: { $in: redisRecommendations },
+          stock: { $gt: 0 }
+        });
+        
+        if (recommendations.length >= 6) {
+          return res.json(recommendations);
+        }
+      }
+    }
+
+    // Fallback to MongoDB-based recommendations
     // Get user's recent activities
     const recentActivities = await UserActivity.find({
       user: req.user._id,
@@ -97,13 +126,15 @@ router.get('/recommendations', auth, async (req, res) => {
       .map(([category]) => category);
 
     // Find similar products
-    const recommendations = await Product.find({
+    const mongoRecommendations = await Product.find({
       category: { $in: topCategories },
       _id: { $nin: Array.from(viewedProducts) },
       stock: { $gt: 0 }
     })
       .sort({ rating: -1, views: -1 })
       .limit(12);
+
+    recommendations = [...recommendations, ...mongoRecommendations].slice(0, 12);
 
     res.json(recommendations);
   } catch (error) {
@@ -226,13 +257,90 @@ router.get('/admin/dashboard', auth, async (req, res) => {
       ? ((addToCartCount - totalPurchases) / addToCartCount * 100).toFixed(2) 
       : 0;
 
+    // CTR for recommendations
+    const recommendationClicks = await UserActivity.countDocuments({ 
+      activityType: 'click',
+      wasRecommendation: true 
+    });
+    const recommendationViews = await UserActivity.countDocuments({ 
+      activityType: 'view',
+      clickSource: 'recommendation'
+    });
+    const recommendationCTR = recommendationViews > 0 
+      ? (recommendationClicks / recommendationViews * 100).toFixed(2) 
+      : 0;
+
+    // Checkout funnel analysis
+    const checkoutStarted = await UserActivity.countDocuments({ 
+      activityType: 'checkout_start' 
+    });
+    const checkoutCompleted = await UserActivity.countDocuments({ 
+      activityType: 'purchase' 
+    });
+    const checkoutDropoffRate = checkoutStarted > 0 
+      ? ((checkoutStarted - checkoutCompleted) / checkoutStarted * 100).toFixed(2) 
+      : 0;
+
+    // Cart abandonment and recovery metrics
+    const CartAbandonmentTracker = require('../utils/cartAbandonmentTracker');
+    const abandonmentMetrics = await CartAbandonmentTracker.getAbandonmentRate(30);
+    const recoveryMetrics = await CartAbandonmentTracker.getRecoveryMetrics(30);
+
     res.json({
       activityStats,
       topProducts,
       conversionRate: parseFloat(conversionRate),
       abandonmentRate: parseFloat(abandonmentRate),
+      recommendationCTR: parseFloat(recommendationCTR),
+      checkoutDropoffRate: parseFloat(checkoutDropoffRate),
       totalViews,
-      totalPurchases
+      totalPurchases,
+      recommendationClicks,
+      recommendationViews,
+      checkoutStarted,
+      checkoutCompleted,
+      cartAbandonment: abandonmentMetrics,
+      cartRecovery: recoveryMetrics
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Admin: Trigger abandoned cart check manually
+router.post('/admin/check-abandoned-carts', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const CartAbandonmentTracker = require('../utils/cartAbandonmentTracker');
+    const results = await CartAbandonmentTracker.checkAbandonedCarts();
+
+    res.json({ 
+      message: 'Abandoned cart check completed',
+      emailsSent: results.length,
+      results 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Admin: Trigger price drop check manually
+router.post('/admin/check-price-drops', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const PriceDropMonitor = require('../utils/priceDropMonitor');
+    const results = await PriceDropMonitor.checkPriceDrops();
+
+    res.json({ 
+      message: 'Price drop check completed',
+      alertsSent: results.length,
+      results 
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

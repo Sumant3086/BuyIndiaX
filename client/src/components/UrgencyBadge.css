@@ -1,0 +1,152 @@
+.urgency-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.urgency-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  animation: slideIn 0.3s ease-out;
+  transition: transform 0.2s ease;
+}
+
+.urgency-badge:hover {
+  transform: translateX(5px);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.urgency-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.urgency-message {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+
+.urgency-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.urgency-progress-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+/* Type-specific styles */
+.urgency-critical {
+  background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+  border-color: #ef4444;
+}
+
+.urgency-warning {
+  background: linear-gradient(135deg, #fff4e6 0%, #ffe4cc 100%);
+  border-color: #f59e0b;
+}
+
+.urgency-trending {
+  background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+  border-color: #ef4444;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+  }
+}
+
+.urgency-popular {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+}
+
+.urgency-featured {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  border-color: #8b5cf6;
+}
+
+.urgency-flash-sale {
+  background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+  border-color: #ef4444;
+  animation: flashPulse 1s infinite;
+}
+
+@keyframes flashPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.urgency-discount {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+}
+
+.urgency-shipping {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+}
+
+.urgency-expiring {
+  background: linear-gradient(135deg, #fff4e6 0%, #ffe4cc 100%);
+  border-color: #f59e0b;
+}
+
+.urgency-social-proof {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+}
+
+.urgency-rating {
+  background: linear-gradient(135deg, #fff4e6 0%, #ffe4cc 100%);
+  border-color: #f59e0b;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .urgency-badge {
+    padding: 10px 12px;
+  }
+
+  .urgency-icon {
+    font-size: 18px;
+  }
+
+  .urgency-message {
+    font-size: 13px;
+  }
+}

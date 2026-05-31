@@ -3,118 +3,163 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
-const { auth } = require('../middleware/auth');
+const { auth, invalidateUserCache } = require('../middleware/auth');
+const { authLimiter } = require('../middleware/rateLimiter');
+
+const signToken = (userId) =>
+  jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+const userPublicFields = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  membershipTier: user.membershipTier,
+  loyaltyPoints: user.loyaltyPoints
+});
 
 // Register
-router.post('/register', [
+router.post('/register', authLimiter, [
   body('name').trim().notEmpty().withMessage('Name is required'),
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('Password must contain uppercase, lowercase, and a number')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { name, email, password } = req.body;
 
-    // Prevent admin role creation through registration
-    if (req.body.role === 'admin') {
-      return res.status(403).json({ message: 'Admin accounts cannot be created through registration' });
-    }
+    const existingUser = await User.findOne({ email }).select('_id');
+    if (existingUser) return res.status(400).json({ message: 'An account with this email already exists' });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+    const user = await User.create({ name, email, password, role: 'user' });
+    const token = signToken(user._id);
 
-    // Force role to be 'user' only
-    const user = new User({ 
-      name, 
-      email, 
-      password,
-      role: 'user' // Always set to user, never admin
-    });
-    await user.save();
-
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
+    res.status(201).json({ token, user: userPublicFields(user) });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
 // Login
-router.post('/login', [
-  body('email').isEmail().withMessage('Valid email is required'),
+router.post('/login', authLimiter, [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) return res.status(401).json({ message: 'Invalid email or password' });
+
+    // Check account lock
+    if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
+      const minutes = Math.ceil((user.accountLockedUntil - Date.now()) / 60000);
+      return res.status(423).json({ message: `Account locked. Try again in ${minutes} minutes.` });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      // Increment failed attempts and lock after 5
+      const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+      const update = { failedLoginAttempts: failedAttempts };
+      if (failedAttempts >= 5) {
+        update.accountLockedUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 min lock
+      }
+      await User.findByIdAndUpdate(user._id, update);
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+    // Reset failed attempts on success
+    await User.findByIdAndUpdate(user._id, {
+      failedLoginAttempts: 0,
+      $unset: { accountLockedUntil: 1 },
+      lastLogin: new Date()
     });
+
+    const token = signToken(user._id);
+    res.json({ token, user: userPublicFields(user) });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Get current user
+// Get current user profile
 router.get('/me', auth, async (req, res) => {
-  res.json({ user: req.user });
+  try {
+    const user = await User.findById(req.user._id)
+      .select('-password -twoFactorSecret -failedLoginAttempts')
+      .lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 });
 
-// Verify admin user exists (for debugging)
-router.get('/verify-admin', async (req, res) => {
+// Update profile
+router.put('/profile', auth, [
+  body('name').optional().trim().notEmpty(),
+  body('phone').optional().isMobilePhone()
+], async (req, res) => {
   try {
-    const admin = await User.findOne({ email: 'admin@buyindiax.com' }).select('-password');
-    if (admin) {
-      res.json({ 
-        exists: true, 
-        admin: {
-          id: admin._id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role
-        }
-      });
-    } else {
-      res.json({ exists: false, message: 'Admin user not found' });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const allowedFields = ['name', 'phone', 'address', 'birthday', 'preferences'];
+    const update = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) update[field] = req.body[field];
     }
+
+    const user = await User.findByIdAndUpdate(req.user._id, update, { new: true })
+      .select('-password -twoFactorSecret');
+
+    // Invalidate Redis cache so next request gets fresh data
+    await invalidateUserCache(req.user._id);
+
+    res.json({ message: 'Profile updated', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Change password
+router.put('/change-password', auth, authLimiter, [
+  body('currentPassword').notEmpty(),
+  body('newPassword').isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('New password must contain uppercase, lowercase, and a number')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const user = await User.findById(req.user._id);
+    const isMatch = await user.comparePassword(req.body.currentPassword);
+    if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
+
+    user.password = req.body.newPassword;
+    await user.save();
+    await invalidateUserCache(req.user._id);
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Logout — invalidate Redis session cache
+router.post('/logout', auth, async (req, res) => {
+  try {
+    await invalidateUserCache(req.user._id);
+    res.json({ message: 'Logged out successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

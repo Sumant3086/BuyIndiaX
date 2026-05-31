@@ -1,114 +1,78 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { AuthContext } from './AuthContext';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { AuthContext } from './AuthContext';
+import api from '../utils/api';
 
 export const CartContext = createContext();
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState({ items: [], totalAmount: 0 });
+  const [cart, setCart] = useState({ items: [], totalAmount: 0, grandTotal: 0 });
   const [loading, setLoading] = useState(false);
   const { user } = useContext(AuthContext);
   const queryClient = useQueryClient();
+
+  const normalizeCart = (data) => ({
+    ...data,
+    items: (data.items || []).filter(item => item.product)
+  });
+
+  const fetchCart = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data } = await api.get('/cart');
+      const normalized = normalizeCart(data);
+      setCart(normalized);
+      queryClient.setQueryData(['cart'], normalized);
+    } catch {
+      setCart({ items: [], totalAmount: 0, grandTotal: 0 });
+    } finally {
+      setLoading(false);
+    }
+  }, [user, queryClient]);
 
   useEffect(() => {
     if (user) {
       fetchCart();
     } else {
-      setCart({ items: [], totalAmount: 0 });
+      setCart({ items: [], totalAmount: 0, grandTotal: 0 });
+      queryClient.setQueryData(['cart'], null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  // Listen to TanStack Query cart updates
-  useEffect(() => {
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event?.query?.queryKey?.[0] === 'cart' && event.type === 'updated') {
-        const cartData = event.query.state.data;
-        if (cartData) {
-          setCart(cartData);
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  }, [queryClient]);
-
-  const fetchCart = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/cart`);
-      const cartData = response.data || { items: [], totalAmount: 0 };
-      
-      // Filter out items with null products
-      if (cartData.items) {
-        cartData.items = cartData.items.filter(item => item.product);
-      }
-      
-      setCart(cartData);
-      // Update TanStack Query cache
-      queryClient.setQueryData(['cart'], cartData);
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-      // Set empty cart on error
-      setCart({ items: [], totalAmount: 0 });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, fetchCart, queryClient]);
 
   const addToCart = async (productId, quantity = 1) => {
-    try {
-      const response = await axios.post(`${API_URL}/cart`, { productId, quantity });
-      setCart(response.data);
-      queryClient.setQueryData(['cart'], response.data);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const { data } = await api.post('/cart', { productId, quantity });
+    const normalized = normalizeCart(data);
+    setCart(normalized);
+    queryClient.setQueryData(['cart'], normalized);
+    return normalized;
   };
 
   const updateCartItem = async (itemId, quantity) => {
-    try {
-      const response = await axios.put(`${API_URL}/cart/${itemId}`, { quantity });
-      setCart(response.data);
-      queryClient.setQueryData(['cart'], response.data);
-    } catch (error) {
-      throw error;
-    }
+    const { data } = await api.put(`/cart/${itemId}`, { quantity });
+    const normalized = normalizeCart(data);
+    setCart(normalized);
+    queryClient.setQueryData(['cart'], normalized);
   };
 
   const removeFromCart = async (itemId) => {
-    try {
-      const response = await axios.delete(`${API_URL}/cart/${itemId}`);
-      setCart(response.data);
-      queryClient.setQueryData(['cart'], response.data);
-    } catch (error) {
-      throw error;
-    }
+    const { data } = await api.delete(`/cart/${itemId}`);
+    const normalized = normalizeCart(data);
+    setCart(normalized);
+    queryClient.setQueryData(['cart'], normalized);
   };
 
   const clearCart = async () => {
-    try {
-      await axios.delete(`${API_URL}/cart`);
-      setCart({ items: [], totalAmount: 0 });
-      queryClient.setQueryData(['cart'], { items: [], totalAmount: 0 });
-    } catch (error) {
-      throw error;
-    }
+    await api.delete('/cart');
+    const empty = { items: [], totalAmount: 0, grandTotal: 0 };
+    setCart(empty);
+    queryClient.setQueryData(['cart'], empty);
   };
 
   return (
-    <CartContext.Provider value={{ 
-      cart, 
-      loading, 
-      addToCart, 
-      updateCartItem, 
-      removeFromCart, 
-      clearCart,
-      fetchCart 
+    <CartContext.Provider value={{
+      cart, loading, addToCart, updateCartItem,
+      removeFromCart, clearCart, fetchCart
     }}>
       {children}
     </CartContext.Provider>

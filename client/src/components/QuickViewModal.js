@@ -4,11 +4,9 @@ import { FaTimes, FaShoppingCart, FaHeart, FaMinus, FaPlus, FaRegHeart } from 'r
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from '../utils/toast';
 import './QuickViewModal.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const QuickViewModal = ({ product, isOpen, onClose }) => {
   const [quantity, setQuantity] = useState(1);
@@ -50,19 +48,12 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
       if (isWishlisted) {
-        await axios.delete(`${API_URL}/wishlist/${product._id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/wishlist/${product._id}`);
         setIsWishlisted(false);
         toast.info('Removed from wishlist');
       } else {
-        await axios.post(
-          `${API_URL}/wishlist/add`,
-          { productId: product._id },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.post('/wishlist/add', { productId: product._id });
         setIsWishlisted(true);
         toast.success('Added to wishlist! ❤️');
       }
